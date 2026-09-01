@@ -1,8 +1,9 @@
 import requests
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 import config
+from auth.security import exigir_token, exigir_token_servico, gerar_token_servico
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ class CreditoRemotoBody(BaseModel):
 
 
 @router.post("/transferencias")
-def transferir(body: TransferenciaBody, request: Request):
+def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends(exigir_token)):
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
@@ -57,10 +58,13 @@ def transferir(body: TransferenciaBody, request: Request):
     ts_envio = relogio.ao_enviar()
     url_destino = next(a["url"] for a in config.AGENCIAS if a["id"] == agencia_destino)
 
+    token_servico = gerar_token_servico(id_agencia)
+
     try:
         resposta = requests.post(
             f"{url_destino}/contas/{body.idDestino}/creditar-remoto",
             json={"valor": body.valor, "timestampLamport": ts_envio, "origemAgencia": id_agencia},
+            headers={"Authorization": f"Bearer {token_servico}"},
             timeout=5,
         )
         resposta.raise_for_status()
@@ -80,7 +84,7 @@ def transferir(body: TransferenciaBody, request: Request):
 
 
 @router.post("/contas/{id}/creditar-remoto")
-def creditar_remoto(id: int, body: CreditoRemotoBody, request: Request):
+def creditar_remoto(id: int, body: CreditoRemotoBody, request: Request, _token: dict = Depends(exigir_token_servico)):
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro

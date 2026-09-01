@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 import config
+from auth.security import exigir_token, hash_senha
 
 router = APIRouter()
 
@@ -9,11 +10,16 @@ router = APIRouter()
 class CriarContaBody(BaseModel):
     id: int
     nomeAluno: str
+    senha: str
     saldoInicial: float = 0
 
 
 class ValorBody(BaseModel):
     valor: float
+
+
+def conta_publica(conta: dict) -> dict:
+    return {"id": conta["id"], "nomeAluno": conta["nomeAluno"], "saldo": conta["saldo"]}
 
 
 @router.post("/contas", status_code=201)
@@ -29,25 +35,30 @@ def criar_conta(body: CriarContaBody, request: Request):
         raise HTTPException(status_code=409, detail="Conta já existe.")
 
     ts = relogio.evento_local()
-    contas[body.id] = {"id": body.id, "nomeAluno": body.nomeAluno, "saldo": body.saldoInicial}
+    contas[body.id] = {
+        "id": body.id,
+        "nomeAluno": body.nomeAluno,
+        "senhaHash": hash_senha(body.senha),
+        "saldo": body.saldoInicial,
+    }
     registro.registrar("CRIAR_CONTA", ts, {
         "id": body.id, "nomeAluno": body.nomeAluno, "saldoInicial": body.saldoInicial,
     })
 
-    return contas[body.id]
+    return conta_publica(contas[body.id])
 
 
 @router.get("/contas/{id}")
-def consultar_saldo(id: int, request: Request):
+def consultar_saldo(id: int, request: Request, _token: dict = Depends(exigir_token)):
     contas = request.app.state.contas
     conta = contas.get(id)
     if conta is None:
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
-    return conta
+    return conta_publica(conta)
 
 
 @router.post("/contas/{id}/depositar")
-def depositar(id: int, body: ValorBody, request: Request):
+def depositar(id: int, body: ValorBody, request: Request, _token: dict = Depends(exigir_token)):
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
@@ -60,11 +71,11 @@ def depositar(id: int, body: ValorBody, request: Request):
     conta["saldo"] += body.valor
     registro.registrar("DEPOSITO", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
-    return conta
+    return conta_publica(conta)
 
 
 @router.post("/contas/{id}/sacar")
-def sacar(id: int, body: ValorBody, request: Request):
+def sacar(id: int, body: ValorBody, request: Request, _token: dict = Depends(exigir_token)):
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
@@ -79,4 +90,4 @@ def sacar(id: int, body: ValorBody, request: Request):
     conta["saldo"] -= body.valor
     registro.registrar("SAQUE", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
-    return conta
+    return conta_publica(conta)

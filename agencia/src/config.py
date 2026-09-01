@@ -14,3 +14,10 @@ AGENCIAS = [
 
 def agencia_responsavel(id_conta: int) -> int:
     return id_conta % NUMERO_AGENCIAS
+
+
+# Chave usada para assinar os JWT. Em producao isso viria de uma variavel de
+# ambiente/segredo gerenciado - aqui fica um valor fixo de desenvolvimento.
+JWT_SECRET = "iceibank-dev-secret-troque-em-producao"
+JWT_ALGORITMO = "HS256"
+JWT_EXPIRA_MINUTOS = 15
