@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs gerados em tempo de execucao
+agencia/data/*.jsonl
+
+# Sistema
+Thumbs.db
+desktop.ini
