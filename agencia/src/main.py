@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import config
@@ -28,6 +29,15 @@ app = FastAPI(title=f"ICEIBank - Agência {id_agencia}", default_response_class=
 @app.exception_handler(HTTPException)
 async def tratar_http_exception(request, exc: HTTPException):
     return RespostaJsonUtf8(status_code=exc.status_code, content={"detail": exc.detail}, headers=exc.headers)
+
+# Libera qualquer origem para simplificar o consumo pelo frontend estatico
+# da Parte G (uso academico local - nao usar allow_origins=["*"] em producao).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.state.id_agencia = id_agencia
 app.state.relogio = RelogioLamport()

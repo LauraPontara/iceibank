@@ -10,3 +10,6 @@ agencia/data/*.jsonl
 # Sistema
 Thumbs.db
 desktop.ini
+
+# Config local de ferramentas de IA/editor
+.claude/
