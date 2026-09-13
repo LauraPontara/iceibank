@@ -2,6 +2,8 @@
 
 Linguagem escolhida: Python, com FastAPI. Autenticação com PyJWT, senha guardada com hash PBKDF2-HMAC-SHA256 e salt. Frontend em Vue 3 com Vite.
 
+Vídeo de apresentação: https://www.youtube.com/watch?v=RhjO11qtAps
+
 ## Parte B. Relógio de Lamport
 
 ### 1. Por que usar max(contador_local, timestampRecebido) + 1 em vez de adotar o timestamp recebido diretamente?
