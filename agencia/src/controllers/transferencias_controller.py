@@ -72,6 +72,10 @@ def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends
 
     # Caso entre agencias: chama a agencia de destino diretamente via REST
     ts_envio = relogio.ao_enviar()
+    registro.registrar("TRANSFERENCIA_ENVIO_REMOTO", ts_envio, {
+        "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
+        "agenciaDestino": agencia_destino,
+    })
     url_destino = next(a["url"] for a in config.AGENCIAS if a["id"] == agencia_destino)
 
     token_servico = gerar_token_servico(id_agencia)
