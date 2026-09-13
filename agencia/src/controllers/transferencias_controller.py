@@ -12,6 +12,7 @@ class TransferenciaBody(BaseModel):
     idOrigem: int
     idDestino: int
     valor: float
+    idempotencyKey: str
 
 
 class CreditoRemotoBody(BaseModel):
@@ -26,6 +27,18 @@ def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends
     relogio = request.app.state.relogio
     registro = request.app.state.registro
     id_agencia = request.app.state.id_agencia
+    idempotencia = request.app.state.idempotencia
+
+    # Idempotencia: se essa chave ja foi usada numa transferencia CONCLUIDA
+    # com sucesso, devolve o mesmo resultado sem debitar de novo. Isso protege
+    # contra o caso classico de retry de rede (cliente reenvia a mesma
+    # requisicao porque a resposta se perdeu, achando que a primeira falhou).
+    # Chaves de tentativas que falharam (404/400/502) nao ficam gravadas aqui
+    # de proposito - a limitacao conhecida da Parte D (debito sem rollback em
+    # falha remota) continua sendo um problema em aberto, e nao e o que essa
+    # funcionalidade se propoe a resolver (isso e assunto do Sprint 4).
+    if body.idempotencyKey in idempotencia:
+        return idempotencia[body.idempotencyKey]
 
     conta_origem = contas.get(body.idOrigem)
     if conta_origem is None:
@@ -40,6 +53,7 @@ def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends
     conta_origem["saldo"] -= body.valor
     registro.registrar("TRANSFERENCIA_DEBITO", ts_debito, {
         "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
+        "idempotencyKey": body.idempotencyKey,
     })
 
     if agencia_destino == id_agencia:
@@ -52,7 +66,9 @@ def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends
         registro.registrar("TRANSFERENCIA_CREDITO", ts_credito, {
             "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         })
-        return {"mensagem": "Transferência concluída (mesma agência)."}
+        resultado = {"mensagem": "Transferência concluída (mesma agência)."}
+        idempotencia[body.idempotencyKey] = resultado
+        return resultado
 
     # Caso entre agencias: chama a agencia de destino diretamente via REST
     ts_envio = relogio.ao_enviar()
@@ -68,7 +84,9 @@ def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends
             timeout=5,
         )
         resposta.raise_for_status()
-        return {"mensagem": "Transferência concluída (entre agências)."}
+        resultado = {"mensagem": "Transferência concluída (entre agências)."}
+        idempotencia[body.idempotencyKey] = resultado
+        return resultado
     except requests.RequestException as erro:
         # LIMITACAO CONHECIDA: se esta chamada falhar, o debito ja aplicado acima
         # NAO e revertido - o dinheiro "desaparece" temporariamente. Resolver isso

@@ -18,6 +18,7 @@ async function transferir() {
         idOrigem: estado.sessao.contaId,
         idDestino: Number(destino.value),
         valor: Number(valor.value),
+        idempotencyKey: crypto.randomUUID(),
       },
     });
     mostrar(resultado.mensagem, "sucesso");

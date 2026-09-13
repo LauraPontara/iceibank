@@ -43,6 +43,7 @@ app.state.id_agencia = id_agencia
 app.state.relogio = RelogioLamport()
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
 app.state.contas = {}
+app.state.idempotencia = {}
 
 app.include_router(router)
 
