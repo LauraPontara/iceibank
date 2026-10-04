@@ -31,28 +31,22 @@ def criar_conta(body: CriarContaBody, request: Request):
 
     if config.agencia_responsavel(body.id) != id_agencia:
         raise HTTPException(status_code=400, detail=f"Conta {body.id} não pertence a esta agência.")
-    if body.id in contas:
+    if contas.existe(body.id):
         raise HTTPException(status_code=409, detail="Conta já existe.")
 
     ts = relogio.evento_local()
-    contas[body.id] = {
-        "id": body.id,
-        "nomeAluno": body.nomeAluno,
-        "senhaHash": hash_senha(body.senha),
-        "saldo": body.saldoInicial,
-    }
+    conta = contas.criar(body.id, body.nomeAluno, hash_senha(body.senha), body.saldoInicial)
     registro.registrar("CRIAR_CONTA", ts, {
         "id": body.id, "nomeAluno": body.nomeAluno, "saldoInicial": body.saldoInicial,
     })
 
-    return conta_publica(contas[body.id])
+    return conta_publica(conta)
 
 
 @router.get("/contas/{id}")
 def consultar_saldo(id: int, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
     exigir_dono_ou_admin(token, id)
-    contas = request.app.state.contas
-    conta = contas.get(id)
+    conta = request.app.state.contas.obter(id)
     if conta is None:
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
     return conta_publica(conta)
@@ -65,12 +59,11 @@ def depositar(id: int, body: ValorBody, request: Request, token: dict = Depends(
     relogio = request.app.state.relogio
     registro = request.app.state.registro
 
-    conta = contas.get(id)
-    if conta is None:
+    if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
 
     ts = relogio.evento_local()
-    conta["saldo"] += body.valor
+    conta = contas.creditar(id, body.valor)
     registro.registrar("DEPOSITO", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
     return conta_publica(conta)
@@ -83,14 +76,14 @@ def sacar(id: int, body: ValorBody, request: Request, token: dict = Depends(exig
     relogio = request.app.state.relogio
     registro = request.app.state.registro
 
-    conta = contas.get(id)
+    conta = contas.obter(id)
     if conta is None:
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
     if conta["saldo"] < body.valor:
         raise HTTPException(status_code=400, detail="Saldo insuficiente.")
 
     ts = relogio.evento_local()
-    conta["saldo"] -= body.valor
+    conta = contas.debitar(id, body.valor)
     registro.registrar("SAQUE", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
     return conta_publica(conta)
