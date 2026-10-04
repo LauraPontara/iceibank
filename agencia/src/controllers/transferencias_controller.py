@@ -38,10 +38,11 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
     # de proposito - a limitacao conhecida da Parte D (debito sem rollback em
     # falha remota) continua sendo um problema em aberto, e nao e o que essa
     # funcionalidade se propoe a resolver (isso e assunto do Sprint 4).
-    if body.idempotencyKey in idempotencia:
-        return idempotencia[body.idempotencyKey]
+    resultado_anterior = idempotencia.obter(body.idempotencyKey)
+    if resultado_anterior is not None:
+        return resultado_anterior
 
-    conta_origem = contas.get(body.idOrigem)
+    conta_origem = contas.obter(body.idOrigem)
     if conta_origem is None:
         raise HTTPException(status_code=404, detail="Conta de origem não encontrada nesta agência.")
     if conta_origem["saldo"] < body.valor:
@@ -51,24 +52,23 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
 
     # O debito e sempre local, pois esta agencia e a dona da conta de origem
     ts_debito = relogio.evento_local()
-    conta_origem["saldo"] -= body.valor
+    contas.debitar(body.idOrigem, body.valor)
     registro.registrar("TRANSFERENCIA_DEBITO", ts_debito, {
         "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         "idempotencyKey": body.idempotencyKey,
     })
 
     if agencia_destino == id_agencia:
-        conta_destino = contas.get(body.idDestino)
-        if conta_destino is None:
-            conta_origem["saldo"] += body.valor
+        if not contas.existe(body.idDestino):
+            contas.creditar(body.idOrigem, body.valor)
             raise HTTPException(status_code=404, detail="Conta de destino não encontrada.")
         ts_credito = relogio.evento_local()
-        conta_destino["saldo"] += body.valor
+        contas.creditar(body.idDestino, body.valor)
         registro.registrar("TRANSFERENCIA_CREDITO", ts_credito, {
             "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         })
         resultado = {"mensagem": "Transferência concluída (mesma agência)."}
-        idempotencia[body.idempotencyKey] = resultado
+        idempotencia.registrar(body.idempotencyKey, resultado)
         return resultado
 
     # Caso entre agencias: chama a agencia de destino diretamente via REST
@@ -90,7 +90,7 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
         )
         resposta.raise_for_status()
         resultado = {"mensagem": "Transferência concluída (entre agências)."}
-        idempotencia[body.idempotencyKey] = resultado
+        idempotencia.registrar(body.idempotencyKey, resultado)
         return resultado
     except requests.RequestException as erro:
         # LIMITACAO CONHECIDA: se esta chamada falhar, o debito ja aplicado acima
@@ -116,11 +116,10 @@ def creditar_remoto(id: int, body: CreditoRemotoBody, request: Request, _token: 
     # atualizado com base no timestamp recebido - e a regra 3 do algoritmo.
     ts = relogio.ao_receber(body.timestampLamport)
 
-    conta = contas.get(id)
-    if conta is None:
+    if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
 
-    conta["saldo"] += body.valor
+    conta = contas.creditar(id, body.valor)
     registro.registrar("TRANSFERENCIA_CREDITO_REMOTO", ts, {
         "idConta": id, "valor": body.valor, "origemAgencia": body.origemAgencia,
     })
