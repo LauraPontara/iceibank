@@ -18,6 +18,8 @@ As agências precisam estar no ar nas portas `4030`, `4031` e `4032` (ver `agenc
 - `/entrar` login por número da conta e senha. A agência é escolhida automaticamente, mas pode ser forçada.
 - `/painel` saldo, depósito, saque, transferência (local ou entre agências) e atividade recente.
 
+- `/admin/entrar` e `/admin` área restrita ao administrador: status das agências, lista de contas de todas as agências, criação de contas com saldo inicial, depósito, saque e transferência entre quaisquer contas. As credenciais vêm de variáveis de ambiente das agências (ver o README da raiz). Clientes comuns são redirecionados para o login do admin.
+
 ## Estrutura
 
 - `src/views` telas (uma por rota).
