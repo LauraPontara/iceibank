@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import config
+from repositories.conta_repository import ContaRepository
+from repositories.idempotencia_repository import IdempotenciaRepository
 from routes import router
 from services.event_log import RegistroEventos
 from services.lamport_clock import RelogioLamport
@@ -42,8 +44,8 @@ app.add_middleware(
 app.state.id_agencia = id_agencia
 app.state.relogio = RelogioLamport()
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
-app.state.contas = {}
-app.state.idempotencia = {}
+app.state.contas = ContaRepository()
+app.state.idempotencia = IdempotenciaRepository()
 
 app.include_router(router)
 
