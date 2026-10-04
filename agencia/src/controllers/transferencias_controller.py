@@ -1,6 +1,6 @@
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import config
 from auth.security import exigir_usuario_ou_admin, exigir_token_servico, gerar_token_servico
@@ -11,7 +11,7 @@ router = APIRouter()
 class TransferenciaBody(BaseModel):
     idOrigem: int
     idDestino: int
-    valor: float
+    valor: float = Field(gt=0)
     idempotencyKey: str
 
 

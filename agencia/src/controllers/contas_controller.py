@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import config
 from auth.security import exigir_usuario_ou_admin, hash_senha
@@ -11,11 +11,11 @@ class CriarContaBody(BaseModel):
     id: int
     nomeAluno: str
     senha: str
-    saldoInicial: float = 0
+    saldoInicial: float = Field(default=0, ge=0)
 
 
 class ValorBody(BaseModel):
-    valor: float
+    valor: float = Field(gt=0)
 
 
 def conta_publica(conta: dict) -> dict:
