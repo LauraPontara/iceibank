@@ -36,7 +36,7 @@ async function transferir() {
     destino.value = "";
     valor.value = "";
   } catch (erro) {
-    mostrar(erro.message, "erro");
+    if (!erro.tratado) mostrar(erro.message, "erro");
   } finally {
     carregando.value = false;
   }
