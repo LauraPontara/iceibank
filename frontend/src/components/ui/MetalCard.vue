@@ -32,8 +32,19 @@ const estiloPalco = computed(() => ({
 </script>
 
 <template>
-  <div class="cena" @pointermove="aoMover" @pointerleave="aoSair" @click="virado = !virado">
-    <div class="palco" :style="estiloPalco" role="img" :aria-label="`Cartão ICEIBank Metal final ${finais}`">
+  <div
+    class="cena"
+    role="button"
+    tabindex="0"
+    :aria-pressed="virado"
+    :aria-label="`Cartão ICEIBank Metal final ${finais}, titular ${titular}${saldo ? `, saldo ${saldo}` : ''}. Ativar para virar o cartão.`"
+    @pointermove="aoMover"
+    @pointerleave="aoSair"
+    @click="virado = !virado"
+    @keydown.enter.prevent="virado = !virado"
+    @keydown.space.prevent="virado = !virado"
+  >
+    <div class="palco" :style="estiloPalco" aria-hidden="true">
       <div class="face frente card-sheen">
         <div class="brilho" />
         <div class="topo">
