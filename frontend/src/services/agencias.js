@@ -7,5 +7,5 @@ export const AGENCIAS = [0, 1, 2].map((id) => ({
 }));
 
 export function agenciaDaConta(idConta) {
-  return AGENCIAS[Math.abs(Number(idConta)) % AGENCIAS.length];
+  return AGENCIAS[Math.trunc(Math.abs(Number(idConta))) % AGENCIAS.length];
 }
