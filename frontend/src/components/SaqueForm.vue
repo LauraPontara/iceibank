@@ -5,7 +5,7 @@ import { useContaApi } from "../composables/useContaApi";
 import { useMensagem } from "../composables/useMensagem";
 import { formatarMoeda } from "../services/formato";
 
-const emit = defineEmits(["saldoAtualizado", "concluido"]);
+const emit = defineEmits(["concluido"]);
 const { estado } = useSessao();
 const { chamarAutenticado } = useContaApi();
 const { mostrar } = useMensagem();
@@ -16,11 +16,10 @@ async function sacar() {
   carregando.value = true;
   try {
     const montante = Number(valor.value);
-    const conta = await chamarAutenticado(`/contas/${estado.sessao.contaId}/sacar`, {
+    await chamarAutenticado(`/contas/${estado.sessao.contaId}/sacar`, {
       metodo: "POST",
       corpo: { valor: montante },
     });
-    emit("saldoAtualizado", conta.saldo);
     emit("concluido", { tipo: "saque", valor: montante });
     mostrar(`Saque de ${formatarMoeda(montante)} realizado.`, "sucesso");
     valor.value = "";
