@@ -15,14 +15,20 @@ const estado = reactive({ porConta: carregar() });
 
 watch(
   () => estado.porConta,
-  (valor) => localStorage.setItem(CHAVE, JSON.stringify(valor)),
+  (valor) => {
+    try {
+      localStorage.setItem(CHAVE, JSON.stringify(valor));
+    } catch {
+      // cota cheia ou modo privado: o historico vale so nesta sessao
+    }
+  },
   { deep: true }
 );
 
 export function useAtividade() {
   function registrar(contaId, item) {
     const lista = estado.porConta[contaId] ?? [];
-    lista.unshift({ ...item, em: new Date().toISOString() });
+    lista.unshift({ ...item, id: crypto.randomUUID(), em: new Date().toISOString() });
     estado.porConta[contaId] = lista.slice(0, LIMITE);
   }
   function listar(contaId) {
