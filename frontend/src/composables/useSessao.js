@@ -3,8 +3,11 @@ import { reactive, watch } from "vue";
 const CHAVE = "iceibank_sessao";
 
 function carregar() {
-  const bruto = localStorage.getItem(CHAVE);
-  return bruto ? JSON.parse(bruto) : null;
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE));
+  } catch {
+    return null;
+  }
 }
 
 const estado = reactive({ sessao: carregar() });
@@ -12,8 +15,12 @@ const estado = reactive({ sessao: carregar() });
 watch(
   () => estado.sessao,
   (valor) => {
-    if (valor) localStorage.setItem(CHAVE, JSON.stringify(valor));
-    else localStorage.removeItem(CHAVE);
+    try {
+      if (valor) localStorage.setItem(CHAVE, JSON.stringify(valor));
+      else localStorage.removeItem(CHAVE);
+    } catch {
+      // armazenamento indisponivel: a sessao vale so ate recarregar a pagina
+    }
   },
   { deep: true }
 );
