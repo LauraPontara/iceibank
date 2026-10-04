@@ -1,5 +1,30 @@
-# Vue 3 + Vite
+# Frontend do ICEIBank
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Interface web em Vue 3 + Vite que consome as 3 agências REST do Sprint 1.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Rodando
+
+```bash
+npm install
+npm run dev
+```
+
+As agências precisam estar no ar nas portas `4030`, `4031` e `4032` (ver `agencia/`). A porta base pode ser trocada com a variável `VITE_PORTA_BASE`.
+
+## Telas
+
+- `/` página inicial com o cartão metal 3D.
+- `/abrir-conta` cria a conta direto pela interface. O número é gerado automaticamente (ou informado) e determina a agência por `id % 3`.
+- `/entrar` login por número da conta e senha. A agência é escolhida automaticamente, mas pode ser forçada.
+- `/painel` saldo, depósito, saque, transferência (local ou entre agências) e atividade recente.
+
+## Estrutura
+
+- `src/views` telas (uma por rota).
+- `src/components` formulários de operação e lista de atividade.
+- `src/components/ui` blocos visuais reutilizáveis (cartão 3D, fundo animado, cabeçalho).
+- `src/composables` estado compartilhado (sessão, mensagens, tema, atividade).
+- `src/services` acesso à API, formatação e mapa de agências.
+- `src/styles` tokens e estilos do design system.
+
+O design system está documentado em [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
