@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useSessao } from "../composables/useSessao";
 import { useContaApi } from "../composables/useContaApi";
 import { useMensagem } from "../composables/useMensagem";
@@ -13,6 +13,10 @@ const { mostrar } = useMensagem();
 const destino = ref("");
 const valor = ref("");
 const carregando = ref(false);
+// Mantida entre tentativas para que um reenvio apos falha de rede nao debite duas vezes.
+const chaveIdempotencia = ref(crypto.randomUUID());
+
+watch([destino, valor], () => (chaveIdempotencia.value = crypto.randomUUID()));
 
 const entreAgencias = computed(
   () => destino.value !== "" && agenciaDaConta(destino.value).url !== estado.sessao.agenciaUrl
@@ -28,7 +32,7 @@ async function transferir() {
         idOrigem: estado.sessao.contaId,
         idDestino: Number(destino.value),
         valor: montante,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: chaveIdempotencia.value,
       },
     });
     emit("concluido", { tipo: "transferencia", valor: montante, contraparte: Number(destino.value) });
