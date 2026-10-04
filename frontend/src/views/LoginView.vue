@@ -64,6 +64,7 @@ async function entrar() {
     </form>
     <template #rodape>
       Ainda não tem conta? <RouterLink to="/abrir-conta">Abrir conta</RouterLink>
+      · <RouterLink to="/admin/entrar">Sou administrador</RouterLink>
     </template>
   </AuthCard>
 </template>

@@ -26,7 +26,9 @@ async function sair() {
       <div class="acoes">
         <ThemeToggle />
         <template v-if="estado.sessao">
-          <RouterLink to="/painel" class="entrar">Meu painel</RouterLink>
+          <RouterLink :to="estado.sessao.papel === 'admin' ? '/admin' : '/painel'" class="entrar">
+            {{ estado.sessao.papel === "admin" ? "Painel admin" : "Meu painel" }}
+          </RouterLink>
           <button type="button" class="btn-ghost sair" @click="sair"><LogOut :size="14" /> Sair</button>
         </template>
         <template v-else>
