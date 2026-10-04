@@ -1,0 +1,33 @@
+.glow-mesh {
+  background-image:
+    radial-gradient(60% 55% at 18% 8%, oklch(0.65 0.25 352 / 0.35), transparent 60%),
+    radial-gradient(55% 55% at 88% 22%, oklch(0.65 0.25 352 / 0.18), transparent 60%),
+    radial-gradient(60% 70% at 60% 100%, oklch(0.75 0.12 352 / 0.15), transparent 65%);
+}
+
+.card-sheen {
+  background:
+    linear-gradient(135deg, oklch(1 0 0 / 16%) 0%, oklch(1 0 0 / 2%) 42%, transparent 55%),
+    linear-gradient(160deg, oklch(0.2 0.01 340) 0%, oklch(0.1 0.005 340) 70%);
+}
+
+.rise-in {
+  animation: rise-in 0.6s ease both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
+}
