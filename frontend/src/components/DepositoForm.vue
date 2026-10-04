@@ -3,32 +3,41 @@ import { ref } from "vue";
 import { useSessao } from "../composables/useSessao";
 import { useContaApi } from "../composables/useContaApi";
 import { useMensagem } from "../composables/useMensagem";
+import { formatarMoeda } from "../services/formato";
 
-const emit = defineEmits(["saldoAtualizado"]);
+const emit = defineEmits(["saldoAtualizado", "concluido"]);
 const { estado } = useSessao();
 const { chamarAutenticado } = useContaApi();
 const { mostrar } = useMensagem();
 const valor = ref("");
+const carregando = ref(false);
 
 async function depositar() {
+  carregando.value = true;
   try {
+    const montante = Number(valor.value);
     const conta = await chamarAutenticado(`/contas/${estado.sessao.contaId}/depositar`, {
       metodo: "POST",
-      corpo: { valor: Number(valor.value) },
+      corpo: { valor: montante },
     });
     emit("saldoAtualizado", conta.saldo);
-    mostrar(`Depósito de ${valor.value} realizado.`, "sucesso");
+    emit("concluido", { tipo: "deposito", valor: montante });
+    mostrar(`Depósito de ${formatarMoeda(montante)} realizado.`, "sucesso");
     valor.value = "";
   } catch (erro) {
     mostrar(erro.message, "erro");
+  } finally {
+    carregando.value = false;
   }
 }
 </script>
 
 <template>
-  <form class="cartao" @submit.prevent="depositar">
-    <h3>Depósito</h3>
-    <label>Valor: <input type="number" step="0.01" v-model="valor" required /></label>
-    <button type="submit">Depositar</button>
+  <form @submit.prevent="depositar">
+    <label class="field">
+      <span>Valor (R$)</span>
+      <input v-model="valor" class="valor" type="number" min="0.01" step="0.01" placeholder="0,00" required />
+    </label>
+    <button type="submit" class="btn-primary btn-block" :disabled="carregando">Depositar</button>
   </form>
 </template>
