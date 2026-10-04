@@ -64,6 +64,31 @@ def exigir_token(authorization: str | None = Header(default=None)) -> dict:
     return payload
 
 
+def gerar_token_admin() -> str:
+    agora = datetime.now(timezone.utc)
+    payload = {
+        "sub": "admin",
+        "tipo": "admin",
+        "iat": agora,
+        "exp": agora + timedelta(minutes=config.JWT_EXPIRA_MINUTOS),
+    }
+    return jwt.encode(payload, config.JWT_SECRET, algorithm=config.JWT_ALGORITMO)
+
+
+def exigir_admin(authorization: str | None = Header(default=None)) -> dict:
+    payload = _decodificar(authorization)
+    if payload.get("tipo") != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao administrador.")
+    return payload
+
+
+def exigir_usuario_ou_admin(authorization: str | None = Header(default=None)) -> dict:
+    payload = _decodificar(authorization)
+    if payload.get("tipo") not in ("usuario", "admin"):
+        raise HTTPException(status_code=401, detail="Token não é de um usuário autenticado.")
+    return payload
+
+
 def exigir_token_servico(authorization: str | None = Header(default=None)) -> dict:
     payload = _decodificar(authorization)
     if payload.get("tipo") != "inter-agencia":
