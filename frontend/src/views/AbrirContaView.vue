@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import { chamarApi } from "../services/api";
 import { agenciaDaConta } from "../services/agencias";
+import { criarConta } from "../services/contas";
 import { useSessao } from "../composables/useSessao";
 import { useMensagem } from "../composables/useMensagem";
 import AuthCard from "../components/ui/AuthCard.vue";
@@ -18,32 +19,6 @@ const numero = ref("");
 const carregando = ref(false);
 
 const agencia = computed(() => (numero.value ? agenciaDaConta(numero.value) : null));
-const MAX_TENTATIVAS = 8;
-
-function numeroAleatorio() {
-  return Math.floor(1000 + Math.random() * 9000);
-}
-
-async function criar(id, saldoInicial = 0) {
-  const agenciaConta = agenciaDaConta(id);
-  await chamarApi(agenciaConta.url, "/contas", {
-    metodo: "POST",
-    corpo: { id, nomeAluno: nome.value.trim(), senha: senha.value, saldoInicial },
-  });
-  return agenciaConta;
-}
-
-async function criarComNumeroAutomatico() {
-  for (let tentativa = 0; tentativa < MAX_TENTATIVAS; tentativa++) {
-    const id = numeroAleatorio();
-    try {
-      return { id, agenciaConta: await criar(id) };
-    } catch (erro) {
-      if (erro.status !== 409) throw erro;
-    }
-  }
-  throw new Error("Não foi possível gerar um número de conta livre. Tente novamente.");
-}
 
 async function abrirConta() {
   if (senha.value !== confirmacao.value) {
@@ -52,14 +27,11 @@ async function abrirConta() {
   }
   carregando.value = true;
   try {
-    let id;
-    let agenciaConta;
-    if (numero.value) {
-      id = Number(numero.value);
-      agenciaConta = await criar(id);
-    } else {
-      ({ id, agenciaConta } = await criarComNumeroAutomatico());
-    }
+    const { id, agencia: agenciaConta } = await criarConta({
+      nome: nome.value,
+      senha: senha.value,
+      numero: numero.value,
+    });
     try {
       const login = await chamarApi(agenciaConta.url, "/auth/login", {
         metodo: "POST",
