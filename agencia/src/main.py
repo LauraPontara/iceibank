@@ -9,7 +9,7 @@ from repositories.conta_repository import ContaRepository
 from repositories.idempotencia_repository import IdempotenciaRepository
 from routes import router
 from services.event_log import RegistroEventos
-from services.lamport_clock import RelogioLamport
+from services.relogio_vetorial import RelogioVetorial
 
 id_agencia = int(os.environ.get("AGENCIA_ID", "0"))
 agencia_config = next((a for a in config.AGENCIAS if a["id"] == id_agencia), None)
@@ -42,7 +42,7 @@ app.add_middleware(
 )
 
 app.state.id_agencia = id_agencia
-app.state.relogio = RelogioLamport()
+app.state.relogio = RelogioVetorial(id_agencia, config.NUMERO_AGENCIAS)
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
 app.state.contas = ContaRepository()
 app.state.idempotencia = IdempotenciaRepository()
