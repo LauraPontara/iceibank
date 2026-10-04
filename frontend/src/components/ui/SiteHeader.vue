@@ -16,12 +16,12 @@ async function sair() {
 
 <template>
   <header class="cabecalho">
-    <nav class="container barra">
+    <nav class="container barra" aria-label="Principal">
       <LogoMark />
       <div class="links">
-        <a href="/#recursos">Conta</a>
-        <a href="/#recursos">Cartões</a>
-        <a href="/#numeros">Arquitetura</a>
+        <RouterLink to="/#recursos">Conta</RouterLink>
+        <RouterLink to="/#recursos">Cartões</RouterLink>
+        <RouterLink to="/#numeros">Arquitetura</RouterLink>
       </div>
       <div class="acoes">
         <ThemeToggle />
