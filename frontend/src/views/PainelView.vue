@@ -106,8 +106,8 @@ onMounted(atualizar);
             <component :is="item.icone" :size="16" /> {{ item.rotulo }}
           </button>
         </div>
-        <DepositoForm v-if="aba === 'deposito'" @concluido="aoConcluir" @saldo-atualizado="() => {}" />
-        <SaqueForm v-else-if="aba === 'saque'" @concluido="aoConcluir" @saldo-atualizado="() => {}" />
+        <DepositoForm v-if="aba === 'deposito'" @concluido="aoConcluir" />
+        <SaqueForm v-else-if="aba === 'saque'" @concluido="aoConcluir" />
         <TransferenciaForm v-else @concluido="aoConcluir" />
       </section>
     </div>
