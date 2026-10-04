@@ -149,3 +149,8 @@
   border-color: color-mix(in oklch, var(--destructive) 25%, transparent);
   background: color-mix(in oklch, var(--destructive) 10%, transparent);
 }
+
+.field input.valor {
+  font-family: var(--font-display);
+  font-size: 24px;
+}
