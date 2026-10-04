@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 import config
-from auth.security import exigir_token, exigir_token_servico, gerar_token_servico
+from auth.security import exigir_usuario_ou_admin, exigir_token_servico, gerar_token_servico
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ class CreditoRemotoBody(BaseModel):
 
 
 @router.post("/transferencias")
-def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends(exigir_token)):
+def transferir(body: TransferenciaBody, request: Request, _token: dict = Depends(exigir_usuario_ou_admin)):
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
