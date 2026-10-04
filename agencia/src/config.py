@@ -21,3 +21,9 @@ def agencia_responsavel(id_conta: int) -> int:
 JWT_SECRET = "iceibank-dev-secret-troque-em-producao"
 JWT_ALGORITMO = "HS256"
 JWT_EXPIRA_MINUTOS = 15
+
+
+# Credenciais do administrador (uso de desenvolvimento/teste). Permitem operar
+# qualquer conta das agencias pelo painel admin do frontend.
+ADMIN_USUARIO = "admin"
+ADMIN_SENHA = "admin123"
