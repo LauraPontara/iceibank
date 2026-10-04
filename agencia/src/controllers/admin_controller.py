@@ -17,6 +17,6 @@ def listar_contas(request: Request, _token: dict = Depends(exigir_admin)):
 def status_agencia(request: Request, _token: dict = Depends(exigir_admin)):
     return {
         "idAgencia": request.app.state.id_agencia,
-        "relogioLamport": request.app.state.relogio.contador,
+        "relogioVetorial": request.app.state.relogio.atual(),
         "totalContas": request.app.state.contas.contar(),
     }
