@@ -43,7 +43,7 @@ async function entrar() {
     <form @submit.prevent="entrar">
       <label class="field">
         <span>Número da conta</span>
-        <input v-model="id" type="number" min="0" placeholder="Ex.: 1001" required autofocus />
+        <input v-model="id" type="number" min="0" step="1" placeholder="Ex.: 1001" required autofocus />
       </label>
       <label class="field">
         <span>Senha</span>
