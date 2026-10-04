@@ -17,7 +17,7 @@ function negativo(tipo) {
     Nenhuma movimentação ainda. Faça um depósito para começar.
   </p>
   <ul v-else class="lista">
-    <li v-for="item in itens" :key="item.em" class="linha">
+    <li v-for="item in itens" :key="item.id ?? item.em" class="linha">
       <span class="icone"><component :is="ICONES[item.tipo]" :size="16" /></span>
       <div class="texto">
         <p class="titulo">{{ ROTULOS[item.tipo] }}</p>
