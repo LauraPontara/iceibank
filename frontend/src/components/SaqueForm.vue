@@ -25,7 +25,7 @@ async function sacar() {
     mostrar(`Saque de ${formatarMoeda(montante)} realizado.`, "sucesso");
     valor.value = "";
   } catch (erro) {
-    mostrar(erro.message, "erro");
+    if (!erro.tratado) mostrar(erro.message, "erro");
   } finally {
     carregando.value = false;
   }
