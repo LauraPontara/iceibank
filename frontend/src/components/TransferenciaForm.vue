@@ -47,7 +47,7 @@ async function transferir() {
   <form @submit.prevent="transferir">
     <label class="field">
       <span>Conta de destino</span>
-      <input v-model="destino" type="number" min="0" placeholder="Ex.: 1002" required />
+      <input v-model="destino" type="number" min="0" step="1" placeholder="Ex.: 1002" required />
     </label>
     <p v-if="destino" class="rota muted">
       {{ entreAgencias ? "Transferência entre agências" : "Mesma agência" }}
