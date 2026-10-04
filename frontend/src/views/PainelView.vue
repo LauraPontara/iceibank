@@ -38,7 +38,7 @@ async function atualizar() {
   try {
     conta.value = await chamarAutenticado(`/contas/${estado.sessao.contaId}`);
   } catch (erro) {
-    mostrar(erro.message, "erro");
+    if (!erro.tratado) mostrar(erro.message, "erro");
   } finally {
     atualizando.value = false;
   }
