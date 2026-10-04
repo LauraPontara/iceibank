@@ -60,16 +60,22 @@ async function abrirConta() {
     } else {
       ({ id, agenciaConta } = await criarComNumeroAutomatico());
     }
-    const login = await chamarApi(agenciaConta.url, "/auth/login", {
-      metodo: "POST",
-      corpo: { id, senha: senha.value },
-    });
-    iniciar({ token: login.accessToken, contaId: id, agenciaUrl: agenciaConta.url });
+    try {
+      const login = await chamarApi(agenciaConta.url, "/auth/login", {
+        metodo: "POST",
+        corpo: { id, senha: senha.value },
+      });
+      iniciar({ token: login.accessToken, contaId: id, agenciaUrl: agenciaConta.url });
+    } catch {
+      mostrar(`Conta ${id} criada, mas o login automático falhou. Entre com o número e a senha.`, "erro");
+      router.push("/entrar");
+      return;
+    }
     limpar();
     mostrar(`Conta ${id} criada na ${agenciaConta.nome}. Bem-vindo ao ICEIBank!`, "sucesso");
     router.push("/painel");
   } catch (erro) {
-    mostrar(erro.message, "erro");
+    mostrar(erro.status === 409 ? "Este número de conta já está em uso." : erro.message, "erro");
   } finally {
     carregando.value = false;
   }
@@ -93,7 +99,7 @@ async function abrirConta() {
       </label>
       <label class="field">
         <span>Número da conta (opcional)</span>
-        <input v-model="numero" type="number" min="0" placeholder="Deixe em branco para gerar automaticamente" />
+        <input v-model="numero" type="number" min="0" step="1" placeholder="Deixe em branco para gerar automaticamente" />
       </label>
       <p v-if="agencia" class="muted dica">Esta conta ficará na {{ agencia.nome }}.</p>
       <button type="submit" class="btn-primary btn-block" :disabled="carregando">
