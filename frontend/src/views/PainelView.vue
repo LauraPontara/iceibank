@@ -29,8 +29,8 @@ const ABAS = [
   { id: "transferencia", rotulo: "Transferir", icone: ArrowLeftRight },
 ];
 
-const agencia = computed(() => AGENCIAS.find((a) => a.url === estado.sessao.agenciaUrl));
-const atividade = computed(() => listar(estado.sessao.contaId));
+const agencia = computed(() => AGENCIAS.find((a) => a.url === estado.sessao?.agenciaUrl));
+const atividade = computed(() => listar(estado.sessao?.contaId));
 const primeiroNome = computed(() => conta.value?.nomeAluno.split(" ")[0] ?? "");
 
 async function atualizar() {
