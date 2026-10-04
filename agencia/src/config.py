@@ -1,3 +1,5 @@
+import os
+
 # OFFSET pessoal (2 ultimos digitos da matricula/RA), necessario apenas
 # se for rodar em uma maquina compartilhada do laboratorio.
 OFFSET = 30
@@ -23,7 +25,7 @@ JWT_ALGORITMO = "HS256"
 JWT_EXPIRA_MINUTOS = 15
 
 
-# Credenciais do administrador (uso de desenvolvimento/teste). Permitem operar
-# qualquer conta das agencias pelo painel admin do frontend.
-ADMIN_USUARIO = "admin"
-ADMIN_SENHA = "admin123"
+# Credenciais do administrador, lidas do ambiente. Sem as duas variaveis o
+# login de administrador fica desabilitado.
+ADMIN_USUARIO = os.environ.get("ICEIBANK_ADMIN_USUARIO")
+ADMIN_SENHA = os.environ.get("ICEIBANK_ADMIN_SENHA")
