@@ -20,7 +20,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   const { estado } = useSessao();
   if (to.meta.exigeSessao && !estado.sessao) return "/entrar";
-  if (to.path === "/entrar" && estado.sessao) return "/painel";
+  if (["/entrar", "/abrir-conta"].includes(to.path) && estado.sessao) return "/painel";
 });
 
 export default router;
