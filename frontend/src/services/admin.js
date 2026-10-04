@@ -13,7 +13,7 @@ export async function loginAdmin(usuario, senha) {
       });
       return resposta.accessToken;
     } catch (erro) {
-      if (erro.status !== 0) throw erro;
+      if (erro.status !== 0 && erro.status < 500) throw erro;
       ultimoErro = erro;
     }
   }
