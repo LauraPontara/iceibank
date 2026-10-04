@@ -8,9 +8,9 @@ import ThemeToggle from "./ThemeToggle.vue";
 const { estado, encerrar } = useSessao();
 const router = useRouter();
 
-function sair() {
+async function sair() {
+  await router.push("/");
   encerrar();
-  router.push("/");
 }
 </script>
 
