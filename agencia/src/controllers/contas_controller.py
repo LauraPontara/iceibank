@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import config
-from auth.security import exigir_usuario_ou_admin, hash_senha
+from auth.security import exigir_dono_ou_admin, exigir_usuario_ou_admin, hash_senha
 
 router = APIRouter()
 
@@ -49,7 +49,8 @@ def criar_conta(body: CriarContaBody, request: Request):
 
 
 @router.get("/contas/{id}")
-def consultar_saldo(id: int, request: Request, _token: dict = Depends(exigir_usuario_ou_admin)):
+def consultar_saldo(id: int, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
+    exigir_dono_ou_admin(token, id)
     contas = request.app.state.contas
     conta = contas.get(id)
     if conta is None:
@@ -58,7 +59,8 @@ def consultar_saldo(id: int, request: Request, _token: dict = Depends(exigir_usu
 
 
 @router.post("/contas/{id}/depositar")
-def depositar(id: int, body: ValorBody, request: Request, _token: dict = Depends(exigir_usuario_ou_admin)):
+def depositar(id: int, body: ValorBody, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
+    exigir_dono_ou_admin(token, id)
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
@@ -75,7 +77,8 @@ def depositar(id: int, body: ValorBody, request: Request, _token: dict = Depends
 
 
 @router.post("/contas/{id}/sacar")
-def sacar(id: int, body: ValorBody, request: Request, _token: dict = Depends(exigir_usuario_ou_admin)):
+def sacar(id: int, body: ValorBody, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
+    exigir_dono_ou_admin(token, id)
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro

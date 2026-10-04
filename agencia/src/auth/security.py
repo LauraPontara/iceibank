@@ -94,3 +94,11 @@ def exigir_token_servico(authorization: str | None = Header(default=None)) -> di
     if payload.get("tipo") != "inter-agencia":
         raise HTTPException(status_code=401, detail="Token não é um token de serviço entre agências.")
     return payload
+
+
+def exigir_dono_ou_admin(payload: dict, id_conta: int) -> None:
+    if payload.get("tipo") == "admin":
+        return
+    if payload.get("sub") != str(id_conta):
+        raise HTTPException(status_code=403, detail="Você só pode operar a sua própria conta.")
+
