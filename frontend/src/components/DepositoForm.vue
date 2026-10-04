@@ -5,7 +5,7 @@ import { useContaApi } from "../composables/useContaApi";
 import { useMensagem } from "../composables/useMensagem";
 import { formatarMoeda } from "../services/formato";
 
-const emit = defineEmits(["saldoAtualizado", "concluido"]);
+const emit = defineEmits(["concluido"]);
 const { estado } = useSessao();
 const { chamarAutenticado } = useContaApi();
 const { mostrar } = useMensagem();
@@ -16,11 +16,10 @@ async function depositar() {
   carregando.value = true;
   try {
     const montante = Number(valor.value);
-    const conta = await chamarAutenticado(`/contas/${estado.sessao.contaId}/depositar`, {
+    await chamarAutenticado(`/contas/${estado.sessao.contaId}/depositar`, {
       metodo: "POST",
       corpo: { valor: montante },
     });
-    emit("saldoAtualizado", conta.saldo);
     emit("concluido", { tipo: "deposito", valor: montante });
     mostrar(`Depósito de ${formatarMoeda(montante)} realizado.`, "sucesso");
     valor.value = "";
