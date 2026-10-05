@@ -33,18 +33,6 @@ def gerar_token(id_conta: int, id_agencia: int) -> str:
     return jwt.encode(payload, config.JWT_SECRET, algorithm=config.JWT_ALGORITMO)
 
 
-def gerar_token_servico(id_agencia_origem: int) -> str:
-    agora = datetime.now(timezone.utc)
-    payload = {
-        "sub": f"agencia:{id_agencia_origem}",
-        "agenciaOrigem": id_agencia_origem,
-        "tipo": "inter-agencia",
-        "iat": agora,
-        "exp": agora + timedelta(minutes=5),
-    }
-    return jwt.encode(payload, config.JWT_SECRET, algorithm=config.JWT_ALGORITMO)
-
-
 def _decodificar(authorization: str | None) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token ausente. Use o cabeçalho Authorization: Bearer <token>.")
@@ -86,13 +74,6 @@ def exigir_usuario_ou_admin(authorization: str | None = Header(default=None)) ->
     payload = _decodificar(authorization)
     if payload.get("tipo") not in ("usuario", "admin"):
         raise HTTPException(status_code=401, detail="Token não é de um usuário autenticado.")
-    return payload
-
-
-def exigir_token_servico(authorization: str | None = Header(default=None)) -> dict:
-    payload = _decodificar(authorization)
-    if payload.get("tipo") != "inter-agencia":
-        raise HTTPException(status_code=401, detail="Token não é um token de serviço entre agências.")
     return payload
 
 
