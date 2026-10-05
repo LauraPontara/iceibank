@@ -6,6 +6,8 @@ import time
 import pika
 
 EXCHANGE = "iceibank.eventos"
+EXCHANGE_MORTAS = "iceibank.mortas"
+FILA_MORTAS = "fila-mensagens-mortas"
 INTERVALO_RECONEXAO_S = 3
 
 
@@ -30,8 +32,17 @@ def _chave_creditar(id_agencia):
 
 
 def _preparar_fila(canal, id_agencia):
+    # Mensagens rejeitadas (nack sem requeue) vao para a dead-letter queue em vez de se perderem.
+    canal.exchange_declare(exchange=EXCHANGE_MORTAS, exchange_type="fanout", durable=True)
+    canal.queue_declare(queue=FILA_MORTAS, durable=True)
+    canal.queue_bind(queue=FILA_MORTAS, exchange=EXCHANGE_MORTAS)
+
     canal.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
-    canal.queue_declare(queue=nome_fila(id_agencia), durable=True)
+    canal.queue_declare(
+        queue=nome_fila(id_agencia),
+        durable=True,
+        arguments={"x-dead-letter-exchange": EXCHANGE_MORTAS},
+    )
     canal.queue_bind(queue=nome_fila(id_agencia), exchange=EXCHANGE, routing_key=_chave_creditar(id_agencia))
 
 

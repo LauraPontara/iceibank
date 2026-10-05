@@ -1,3 +1,7 @@
+class CreditoRejeitado(Exception):
+    """O credito nao pode ser aplicado e a mensagem deve ir para a dead-letter queue."""
+
+
 def aplicar_credito_remoto(contas, relogio, registro):
     """Devolve o tratador das mensagens de credito vindas de outras agencias."""
 
@@ -13,7 +17,8 @@ def aplicar_credito_remoto(contas, relogio, registro):
             registro.registrar("CREDITO_REMOTO_FALHOU", vetor, {
                 "idConta": id_conta, "valor": valor, "origemAgencia": origem, "motivo": "conta nao encontrada",
             })
-            return
+            # Rejeitar a mensagem (nack sem requeue) a manda para a dead-letter queue, onde pode ser inspecionada.
+            raise CreditoRejeitado(f"conta {id_conta} nao encontrada")
 
         contas.creditar(id_conta, valor)
         registro.registrar("TRANSFERENCIA_CREDITO_REMOTO", vetor, {
