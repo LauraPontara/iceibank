@@ -85,3 +85,80 @@ Testei o comportamento enviando duas vezes a mesma requisição de transferênci
 ## Nota de uso de IA
 
 Usei o Claude (Anthropic), através do Claude Code, como apoio ao longo deste sprint, para redigir e revisar código, redigir este documento de respostas e revisar a organização dos commits. As implementações do relógio de Lamport, do registro de eventos, do particionamento de contas, das transferências, da autenticação JWT, do frontend em Vue e da funcionalidade adicional de idempotência foram desenvolvidas com apoio da IA, mas testadas e verificadas por mim em cada etapa, rodando as três agências localmente, chamando os endpoints e conferindo o comportamento antes de considerar cada parte concluída. As respostas deste arquivo foram redigidas como rascunho pela IA a partir do código efetivamente implementado e do que foi observado nos testes, e revisadas por mim, que sou capaz de explicar e defender qualquer trecho entregue. Declaro esse uso conforme pedido na nota de transparência do próprio roteiro deste sprint.
+
+
+---
+
+# Respostas Sprint 2 - ICEIBank
+
+Linguagem: Python com FastAPI, a mesma do Sprint 1. Mensageria com RabbitMQ via biblioteca pika. Em vez do CloudAMQP usei o RabbitMQ local em Docker (`docker run -d --name rabbitmq-iceibank -p 5672:5672 -p 15672:15672 rabbitmq:3-management`), alternativa prevista na seção 4.1 do roteiro, com `RABBITMQ_URL=amqp://guest:guest@localhost:5672/`.
+
+Antes de começar o sprint, a camada de dados foi separada dos controllers em repositórios (`ContaRepository` e `IdempotenciaRepository`), e foi corrigida a falha em que um cliente logado conseguia operar a conta de outro (agora o token precisa ser do dono da conta, ou de um administrador).
+
+## Parte B. Relógio vetorial
+
+### 1. Com 10 agências, o que acontece com o tamanho do vetor anexado a cada mensagem? É um problema?
+
+O vetor tem uma posição por agência, então com 10 agências cada mensagem carrega 10 inteiros em vez de 3. O custo cresce linearmente com o número de processos. Para 3 ou 10 agências isso é desprezível, porque o vetor é minúsculo perto do restante da mensagem. O problema aparece em sistemas com milhares de processos, onde o vetor passa a dominar o tamanho da mensagem e comparar vetores fica caro. Nesses casos se usam variações, como vetores de versão com poda de entradas antigas ou relógios híbridos.
+
+### 2. V1 = [3, 1, 0] e V2 = [3, 2, 0]: qual evento aconteceu primeiro?
+
+O evento de V1 aconteceu antes. Comparando posição a posição: 3 <= 3, 1 <= 2 e 0 <= 0. Todas as posições de V1 são menores ou iguais às de V2, e os vetores são diferentes, então existe um caminho causal de V1 até V2.
+
+### 3. V1 = [3, 1, 0] e V2 = [1, 3, 0]: qual evento aconteceu primeiro?
+
+São concorrentes. Na posição 0, V1 tem 3 e V2 tem 1, então V2 não é menor ou igual a V1. Na posição 1, V1 tem 1 e V2 tem 3, então V1 não é menor ou igual a V2. Nenhum domina o outro, o que significa que nenhum dos eventos influenciou o outro.
+
+## Parte C. Publish/Subscribe entre agências
+
+### 1. O que aconteceu quando a Agência 1 voltou?
+
+Derrubei a Agência 1 e transferi R$ 40 da conta 3 (Agência 0) para a conta 4 (Agência 1). A resposta foi 200 e o painel do RabbitMQ mostrou `fila-agencia-1` com 1 mensagem pronta e 0 consumidores, ou seja, a mensagem ficou retida em disco. Quando subi a Agência 1 de novo, o consumidor reconectou e a mensagem foi entregue. O log da agência registrou:
+
+`CREDITO_REMOTO_FALHOU [5, 1, 0] {"idConta": 4, "valor": 40.0, "origemAgencia": 0, "motivo": "conta nao encontrada"}`
+
+A mensagem não sumiu por falha da mensageria. Ela chegou, o vetor foi atualizado pela regra de recebimento (a posição 0 passou a 5, vinda da origem), e o crédito não pôde ser aplicado porque a conta 4 não existia mais. As contas ficam só em memória, então reiniciar a agência apagou a conta. Confirmei isso tentando logar na conta 4 depois da reinicialização: resposta 401. Enquanto isso, a conta 3 já tinha sido debitada (de 75 para 35), então os R$ 40 ficaram perdidos.
+
+### 2. O que melhorou em relação ao Sprint 1 e o que continua em aberto?
+
+No Sprint 1, com a chamada REST direta, se a agência de destino estivesse fora do ar a chamada falhava na hora, com erro 502, e o débito já aplicado ficava sem reverter. Agora a transferência é publicada e retida na fila durável até o destino voltar, então a mensagem não se perde em trânsito e o cliente não recebe erro só porque a outra agência está indisponível.
+
+O que continua em aberto é a diferença entre "a mensagem não se perde" e "o sistema está correto". O experimento mostrou isso: a mensagem foi entregue e mesmo assim o dinheiro sumiu, porque o estado das contas não é persistente. Também continua sem solução a atomicidade entre débito e crédito: o débito é aplicado antes de se saber se o crédito vai dar certo, e um 200 agora significa apenas "publicado", não "creditado". O chamador não descobre o resultado final. Resolver isso de forma correta exige persistência das contas e uma transação distribuída com compensação, assunto do Sprint 4. A funcionalidade adicional (dead-letter queue) não corrige o saldo, mas pelo menos preserva a mensagem rejeitada para investigação.
+
+Quando a publicação em si falha (broker fora do ar), a agência estorna o débito e responde 502, para não perder dinheiro nesse caso.
+
+### 3. O consumidor aplica créditos sem verificar JWT. Isso é um problema de segurança?
+
+É um problema, e a gravidade depende de quem consegue publicar na exchange. No meu ambiente de desenvolvimento o RabbitMQ roda local com o usuário padrão `guest`, que o RabbitMQ só aceita a partir de localhost, então a exposição é pequena. Mas quem conseguisse publicar uma mensagem em `iceibank.eventos` com a routing key `agencia.1.creditar` criaria dinheiro em qualquer conta, sem nenhuma autenticação de usuário, porque o consumidor confia em tudo que chega pela fila. Em produção isso exigiria usuários e permissões por vhost no broker, TLS na conexão e assinatura das mensagens (por exemplo HMAC ou um token dentro da mensagem) para o consumidor validar a origem. A confiança que antes estava no token HTTP entre agências passa a depender do controle de acesso ao broker.
+
+## Parte D. Linha do tempo causal
+
+### 1. O que no relógio vetorial torna a comparação confiável?
+
+O vetor guarda um contador por processo, então ele registra exatamente quantos eventos de cada agência já influenciaram aquele evento. Com isso vale a equivalência: o evento A aconteceu antes de B se e somente se o vetor de A é menor ou igual ao de B em todas as posições. O relógio de Lamport comprime tudo em um único número e só garante uma direção (se A aconteceu antes de B, então L(A) < L(B)), sem permitir concluir o contrário. Como o vetor preserva a informação por processo, dá para distinguir "antes" de "concorrente" com certeza.
+
+### 2. Um par que o script classificou como concorrente
+
+Na minha execução o script listou, entre outros:
+
+`[agencia-0] CRIAR_CONTA ([1, 0, 0]) x [agencia-1] CRIAR_CONTA ([0, 1, 0])`
+
+Faz sentido: criei a conta 3 na Agência 0 e a conta 4 na Agência 1 sem nenhuma mensagem trocada entre elas, então nenhum dos dois eventos pode ter influenciado o outro. Cada agência só conhecia seus próprios eventos, e os vetores refletem isso. Também apareceu como concorrente o par `[agencia-1] CRIAR_CONTA ([0, 1, 0])` com `[agencia-0] TRANSFERENCIA_DEBITO ([2, 0, 0])`, porque a Agência 1 ainda não tinha recebido nada da Agência 0 quando criou a conta. Já o débito `[2, 0, 0]` e o crédito remoto `[3, 2, 0]` da transferência 3 para 4 não aparecem na lista, porque o vetor do crédito domina o do débito: há relação causal (o crédito só existe por causa da mensagem publicada depois do débito).
+
+### 3. O algoritmo é O(n²). É um problema com milhões de eventos?
+
+É. Com milhões de eventos seriam da ordem de 10^12 comparações, inviável. Dá para escalar de algumas formas. Como a posição i do vetor conta os eventos da agência i, a relação "A aconteceu antes de B" pode ser checada em tempo constante comparando só `A.vetor[A.agencia] <= B.vetor[A.agencia]`, sem varrer o vetor inteiro. Também dá para indexar os eventos por agência, em ordem, e usar busca binária para achar a faixa de eventos concorrentes de cada evento, em vez de testar todos os pares. E, na prática, normalmente se analisa uma janela de tempo ou um subconjunto de interesse (por exemplo, só as transferências), não o histórico inteiro.
+
+## Funcionalidade adicional: fila de mensagens mortas (dead-letter queue)
+
+Configurei uma dead-letter queue no RabbitMQ. A exchange `iceibank.mortas` (fanout, durável) está ligada à fila durável `fila-mensagens-mortas`, e as filas das agências são declaradas com o argumento `x-dead-letter-exchange` apontando para ela. Quando o consumidor não consegue aplicar um crédito, por exemplo porque a conta não existe, ele registra o evento `CREDITO_REMOTO_FALHOU` no log e rejeita a mensagem sem recolocá-la na fila (`nack` com `requeue=False`). O RabbitMQ então encaminha a mensagem para a fila de mensagens mortas, em vez de ela simplesmente desaparecer depois do ack, que era o comportamento da versão anterior.
+
+Testei transferindo da conta 3 para a conta 7 (que não existe, e que pertence à Agência 1). A resposta foi 200, o consumidor da Agência 1 rejeitou a mensagem e a fila `fila-mensagens-mortas` passou a ter 1 mensagem, com o conteúdo `{"idConta": 7, "valor": 15.0, "vetorEnvio": [3, 0, 0], "origemAgencia": 0, "idTransferencia": "dlq-1"}` e motivo `rejected`. Uma transferência válida feita logo em seguida foi aplicada normalmente.
+
+Uma observação prática: o RabbitMQ não permite mudar os argumentos de uma fila já existente. Ao ativar a dead-letter queue sobre filas criadas antes dela, foi preciso apagá-las uma vez (`rabbitmqctl delete_queue fila-agencia-N`), e elas são recriadas com o argumento novo quando a agência sobe.
+
+Evidências em `evidencias/sprint2/`.
+
+## Nota de uso de IA (Sprint 2)
+
+O Sprint 2 foi implementado com o Claude Code (Anthropic), que escreveu o código, rodou o RabbitMQ em Docker, executou os testes descritos acima (transferência assíncrona, resiliência, dead-letter queue, linha do tempo causal e regressão do frontend e do JWT) e redigiu um rascunho deste documento a partir do que foi observado. As respostas devem ser revisadas e compreendidas antes da entrega, porque preciso ser capaz de explicar e defender qualquer trecho entregue, como pede a nota de transparência do roteiro.
