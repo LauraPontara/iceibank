@@ -1,34 +1,55 @@
 <script setup>
 import { computed, ref } from "vue";
+import { motion, useMotionTemplate, useReducedMotion, useSpring, useTransform } from "motion-v";
+import AnimatedNumber from "./AnimatedNumber.vue";
 
 const props = defineProps({
   titular: { type: String, default: "TITULAR" },
   conta: { type: [String, Number], default: "0000" },
   saldo: { type: String, default: null },
+  valor: { type: Number, default: null },
 });
 
+const reduzido = useReducedMotion();
 const virado = ref(false);
-const inclinacao = ref({ x: 0, y: 0, brilhoX: 50, brilhoY: 50 });
+
+const MOLA = { stiffness: 220, damping: 22, mass: 0.6 };
+const inclinacaoX = useSpring(0, MOLA);
+const inclinacaoY = useSpring(0, MOLA);
+const giro = useSpring(0, { stiffness: 120, damping: 18 });
+const brilhoX = useSpring(50, MOLA);
+const brilhoY = useSpring(50, MOLA);
+
+const rotateY = useTransform(() => inclinacaoY.get() + giro.get());
+const brilho = useMotionTemplate`radial-gradient(circle at ${brilhoX}% ${brilhoY}%, oklch(0.8 0.18 352 / 0.35), transparent 45%)`;
 
 const finais = computed(() => String(props.conta).padStart(4, "0").slice(-4));
+const mostraSaldo = computed(() => props.valor !== null || props.saldo !== null);
 
 function aoMover(evento) {
+  if (reduzido.value) return;
   const caixa = evento.currentTarget.getBoundingClientRect();
   const px = (evento.clientX - caixa.left) / caixa.width;
   const py = (evento.clientY - caixa.top) / caixa.height;
-  inclinacao.value = { x: (0.5 - py) * 16, y: (px - 0.5) * 20, brilhoX: px * 100, brilhoY: py * 100 };
+  inclinacaoX.set((0.5 - py) * 16);
+  inclinacaoY.set((px - 0.5) * 20);
+  brilhoX.set(px * 100);
+  brilhoY.set(py * 100);
 }
 
 function aoSair() {
-  inclinacao.value = { x: 0, y: 0, brilhoX: 50, brilhoY: 50 };
+  inclinacaoX.set(0);
+  inclinacaoY.set(0);
+  brilhoX.set(50);
+  brilhoY.set(50);
 }
 
-const estiloPalco = computed(() => ({
-  "--rx": `${inclinacao.value.x}deg`,
-  "--ry": `${inclinacao.value.y + (virado.value ? 180 : 0)}deg`,
-  "--gx": `${inclinacao.value.brilhoX}%`,
-  "--gy": `${inclinacao.value.brilhoY}%`,
-}));
+function virar() {
+  virado.value = !virado.value;
+  const alvo = virado.value ? 180 : 0;
+  if (reduzido.value) giro.jump(alvo);
+  else giro.set(alvo);
+}
 </script>
 
 <template>
@@ -40,13 +61,13 @@ const estiloPalco = computed(() => ({
     :aria-label="`Cartão ICEIBank Metal final ${finais}, titular ${titular}${saldo ? `, saldo ${saldo}` : ''}. Ativar para virar o cartão.`"
     @pointermove="aoMover"
     @pointerleave="aoSair"
-    @click="virado = !virado"
-    @keydown.enter.prevent="virado = !virado"
-    @keydown.space.prevent="virado = !virado"
+    @click="virar"
+    @keydown.enter.prevent="virar"
+    @keydown.space.prevent="virar"
   >
-    <div class="palco" :style="estiloPalco" aria-hidden="true">
+    <motion.div class="palco" :style="{ rotateX: inclinacaoX, rotateY }" aria-hidden="true">
       <div class="face frente card-sheen">
-        <div class="brilho" />
+        <motion.div class="brilho" :style="{ background: brilho }" />
         <div class="topo">
           <span class="marca">ICEIBank</span>
           <span class="tipo">Metal</span>
@@ -57,8 +78,11 @@ const estiloPalco = computed(() => ({
         </div>
         <div class="base">
           <div>
-            <p class="rotulo">{{ saldo ? "Saldo" : "Titular" }}</p>
-            <p class="valor">{{ saldo ?? titular }}</p>
+            <p class="rotulo">{{ mostraSaldo ? "Saldo" : "Titular" }}</p>
+            <p class="valor">
+              <AnimatedNumber v-if="valor !== null" :valor="valor" />
+              <template v-else>{{ saldo ?? titular }}</template>
+            </p>
           </div>
           <span class="bandeira">VISA</span>
         </div>
@@ -70,7 +94,7 @@ const estiloPalco = computed(() => ({
         <p class="rotulo">Conta</p>
         <p class="valor pequeno mono">{{ conta }}</p>
       </div>
-    </div>
+    </motion.div>
   </div>
 </template>
 
@@ -89,12 +113,6 @@ const estiloPalco = computed(() => ({
   position: relative;
   aspect-ratio: 1.586 / 1;
   transform-style: preserve-3d;
-  transform: rotateX(var(--rx)) rotateY(var(--ry));
-  transition: transform 0.18s ease-out;
-}
-
-.cena:not(:hover) .palco {
-  transition-duration: 0.7s;
 }
 
 .face {
@@ -115,7 +133,6 @@ const estiloPalco = computed(() => ({
 .brilho {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--gx) var(--gy), oklch(0.8 0.18 352 / 0.35), transparent 45%);
   mix-blend-mode: screen;
   pointer-events: none;
 }
@@ -206,12 +223,5 @@ const estiloPalco = computed(() => ({
   height: clamp(28px, 9cqi, 40px);
   margin: calc(-1 * clamp(16px, 6.4cqi, 28px)) calc(-1 * clamp(16px, 6.4cqi, 28px)) 16px;
   background: oklch(0.05 0 0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .palco {
-    transition: none;
-    transform: rotateY(var(--ry));
-  }
 }
 </style>
