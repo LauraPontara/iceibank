@@ -158,6 +158,10 @@ h1 {
   margin-top: 32px;
 }
 
+.grade > * {
+  min-width: 0;
+}
+
 .cartao-coluna {
   display: flex;
   flex-direction: column;
@@ -228,6 +232,17 @@ h2 {
 .nota {
   margin: 4px 0 8px;
   font-size: 12px;
+}
+
+@media (max-width: 420px) {
+  .aba {
+    padding: 10px 4px;
+    font-size: 13px;
+  }
+
+  .aba svg {
+    display: none;
+  }
 }
 
 @media (min-width: 1024px) {
