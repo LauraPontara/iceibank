@@ -60,14 +60,6 @@
   backdrop-filter: blur(12px);
 }
 
-.tile {
-  transition: transform 0.35s ease, background-color 0.35s ease;
-}
-
-.tile:hover {
-  transform: translateY(-3px);
-}
-
 .field {
   display: block;
 }

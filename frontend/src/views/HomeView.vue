@@ -1,39 +1,60 @@
 <script setup>
 import { RouterLink } from "vue-router";
+import { motion } from "motion-v";
 import { ArrowRight, Network, ShieldCheck, Clock, Zap } from "lucide-vue-next";
 import LogoMark from "../components/ui/LogoMark.vue";
 import MetalCard from "../components/ui/MetalCard.vue";
+
+const SUAVE = [0.22, 1, 0.36, 1];
+
+const aparecer = (atraso = 0, deslocamento = 18) => ({
+  initial: { opacity: 0, transform: `translateY(${deslocamento}px)` },
+  animate: { opacity: 1, transform: "translateY(0px)" },
+  transition: { duration: 0.6, delay: atraso, ease: SUAVE },
+});
+
+const aoRolar = (atraso = 0) => ({
+  initial: { opacity: 0, transform: "translateY(24px)" },
+  whileInView: { opacity: 1, transform: "translateY(0px)" },
+  inViewOptions: { once: true, amount: 0.25 },
+  transition: { duration: 0.55, delay: atraso, ease: SUAVE },
+});
+
+const elevar = {
+  whileHover: { transform: "translateY(-3px)" },
+  whileTap: { transform: "translateY(0px)" },
+};
 </script>
 
 <template>
   <main>
     <section class="hero container">
-      <div class="hero-texto rise-in">
-        <span class="chip">Novo · Cartão ICEI Metal já disponível</span>
-        <h1>Um banco que se move como <em>luz.</em></h1>
-        <p class="muted lead">
+      <div class="hero-texto">
+        <motion.span class="chip" v-bind="aparecer(0.05)">Novo · Cartão ICEI Metal já disponível</motion.span>
+        <motion.h1 v-bind="aparecer(0.12)">Um banco que se move como <em>luz.</em></motion.h1>
+        <motion.p class="muted lead" v-bind="aparecer(0.2)">
           Conta digital, cartão metal com brilho rosé e transferências entre agências que nunca dormem.
           ICEIBank é dinheiro, refinado.
-        </p>
-        <div class="cta">
+        </motion.p>
+        <motion.div class="cta" v-bind="aparecer(0.28)">
           <RouterLink to="/abrir-conta" class="btn-primary">Abrir sua conta <ArrowRight :size="16" /></RouterLink>
           <RouterLink to="/#recursos" class="btn-ghost">Conhecer o cartão</RouterLink>
-        </div>
-        <ul class="garantias muted">
+        </motion.div>
+        <motion.ul class="garantias muted" v-bind="aparecer(0.36)">
           <li>Sem tarifas escondidas</li>
           <li>Transferência entre agências</li>
           <li>Sessão protegida por JWT</li>
-        </ul>
+        </motion.ul>
       </div>
-      <div class="hero-cartao rise-in">
+      <motion.div class="hero-cartao" v-bind="aparecer(0.2, 40)">
         <div class="halo" />
         <MetalCard titular="ICEIBank" conta="8842" saldo="R$ 48.210,90" />
         <p class="dica muted">Passe o mouse e clique no cartão</p>
-      </div>
+      </motion.div>
     </section>
 
     <section id="recursos" class="container bento">
-      <article class="surface tile grande">
+      <motion.article class="surface tile grande" v-bind="{ ...aoRolar(0), ...elevar }">
         <p class="eyebrow marcador">Conta</p>
         <h3>Uma conta, tudo que seu dinheiro precisa.</h3>
         <p class="muted">
@@ -44,50 +65,50 @@ import MetalCard from "../components/ui/MetalCard.vue";
           <div><span class="eyebrow">Anuidade</span><strong>R$ 0</strong></div>
           <div><span class="eyebrow">Agências</span><strong>3</strong></div>
         </div>
-      </article>
+      </motion.article>
 
-      <article class="tile escuro">
+      <motion.article class="tile escuro" v-bind="{ ...aoRolar(0.08), ...elevar }">
         <span class="icone"><ShieldCheck :size="18" /></span>
         <h3>Cada acesso é autenticado e expira.</h3>
         <p>Tokens JWT de 15 minutos protegem todas as operações da sua conta.</p>
-      </article>
+      </motion.article>
 
-      <article class="surface tile">
+      <motion.article class="surface tile" v-bind="{ ...aoRolar(0.16), ...elevar }">
         <span class="icone"><Network :size="18" /></span>
         <h3>Entre agências</h3>
         <p class="muted">Contas particionadas em 3 agências independentes que se falam por mensageria.</p>
-      </article>
+      </motion.article>
 
-      <article class="surface tile grande vitrine card-sheen">
+      <motion.article class="surface tile grande vitrine card-sheen" v-bind="{ ...aoRolar(0.24), ...elevar }">
         <div class="brilho-vitrine glow-mesh" />
         <div class="vitrine-texto">
           <h3>ICEI <em>Metal</em></h3>
           <p>Aço escovado, brilho rosé e zero anuidade.</p>
         </div>
-      </article>
+      </motion.article>
     </section>
 
     <section id="numeros" class="container faixa-wrap">
-      <div class="faixa">
+      <motion.div class="faixa" v-bind="aoRolar(0)">
         <div class="glow-mesh brilho-faixa" />
         <div class="faixa-grade">
-          <div>
+          <motion.div v-bind="aoRolar(0.1)">
             <Network :size="20" class="rosa" />
             <p class="numero">3 agências</p>
             <p>Serviços REST independentes, cada um dono de uma fatia das contas.</p>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div v-bind="aoRolar(0.2)">
             <Clock :size="20" class="rosa" />
             <p class="numero rosa">Vetorial</p>
             <p>Cada evento carrega um vetor de contadores, e dá para saber o que é causal e o que é concorrente.</p>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div v-bind="aoRolar(0.3)">
             <Zap :size="20" class="rosa" />
             <p class="numero">Idempotente</p>
             <p>Reenviar uma transferência não debita duas vezes o mesmo valor.</p>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
 
     <footer class="rodape">
