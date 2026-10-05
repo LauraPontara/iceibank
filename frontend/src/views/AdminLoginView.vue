@@ -5,6 +5,7 @@ import { loginAdmin } from "../services/admin";
 import { useSessao } from "../composables/useSessao";
 import { useMensagem } from "../composables/useMensagem";
 import AuthCard from "../components/ui/AuthCard.vue";
+import PasswordField from "../components/ui/PasswordField.vue";
 
 const router = useRouter();
 const { iniciar } = useSessao();
@@ -36,10 +37,7 @@ async function entrar() {
         <span>Usuário</span>
         <input v-model="usuario" type="text" autocomplete="username" required autofocus />
       </label>
-      <label class="field">
-        <span>Senha</span>
-        <input v-model="senha" type="password" autocomplete="current-password" required />
-      </label>
+      <PasswordField v-model="senha" label="Senha" autocomplete="current-password" />
       <button type="submit" class="btn-primary btn-block" :disabled="carregando">
         {{ carregando ? "Entrando..." : "Entrar como administrador" }}
       </button>

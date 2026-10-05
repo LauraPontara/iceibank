@@ -6,6 +6,7 @@ import { AGENCIAS, agenciaDaConta } from "../services/agencias";
 import { useSessao } from "../composables/useSessao";
 import { useMensagem } from "../composables/useMensagem";
 import AuthCard from "../components/ui/AuthCard.vue";
+import PasswordField from "../components/ui/PasswordField.vue";
 
 const router = useRouter();
 const { iniciar } = useSessao();
@@ -45,10 +46,7 @@ async function entrar() {
         <span>Número da conta</span>
         <input v-model="id" type="number" min="0" step="1" placeholder="Ex.: 1001" required autofocus />
       </label>
-      <label class="field">
-        <span>Senha</span>
-        <input v-model="senha" type="password" autocomplete="current-password" required />
-      </label>
+      <PasswordField v-model="senha" label="Senha" autocomplete="current-password" />
       <label class="field">
         <span>Agência</span>
         <select v-model="agenciaEscolhida">
