@@ -1,9 +1,9 @@
-import requests
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import config
-from auth.security import exigir_dono_ou_admin, exigir_usuario_ou_admin, exigir_token_servico, gerar_token_servico
+from auth.security import exigir_dono_ou_admin, exigir_usuario_ou_admin
+from services.mensageria import publicar_credito
 
 router = APIRouter()
 
@@ -13,12 +13,6 @@ class TransferenciaBody(BaseModel):
     idDestino: int
     valor: float = Field(gt=0)
     idempotencyKey: str
-
-
-class CreditoRemotoBody(BaseModel):
-    valor: float
-    timestampLamport: int
-    origemAgencia: int
 
 
 @router.post("/transferencias")
@@ -34,10 +28,8 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
     # com sucesso, devolve o mesmo resultado sem debitar de novo. Isso protege
     # contra o caso classico de retry de rede (cliente reenvia a mesma
     # requisicao porque a resposta se perdeu, achando que a primeira falhou).
-    # Chaves de tentativas que falharam (404/400/502) nao ficam gravadas aqui
-    # de proposito - a limitacao conhecida da Parte D (debito sem rollback em
-    # falha remota) continua sendo um problema em aberto, e nao e o que essa
-    # funcionalidade se propoe a resolver (isso e assunto do Sprint 4).
+    # Chaves de tentativas que falharam (404/400/502) nao ficam gravadas aqui,
+    # para que o cliente possa tentar de novo com a mesma chave.
     resultado_anterior = idempotencia.obter(body.idempotencyKey)
     if resultado_anterior is not None:
         return resultado_anterior
@@ -71,57 +63,31 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
         idempotencia.registrar(body.idempotencyKey, resultado)
         return resultado
 
-    # Caso entre agencias: chama a agencia de destino diretamente via REST
+    # Caso entre agencias: em vez de chamar a outra agencia por REST, publica um
+    # evento no RabbitMQ. A agencia de destino consome quando estiver disponivel;
+    # a mensagem fica retida na fila duravel enquanto ela estiver fora do ar.
     ts_envio = relogio.ao_enviar()
     registro.registrar("TRANSFERENCIA_ENVIO_REMOTO", ts_envio, {
         "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         "agenciaDestino": agencia_destino,
     })
-    url_destino = next(a["url"] for a in config.AGENCIAS if a["id"] == agencia_destino)
-
-    token_servico = gerar_token_servico(id_agencia)
 
     try:
-        resposta = requests.post(
-            f"{url_destino}/contas/{body.idDestino}/creditar-remoto",
-            json={"valor": body.valor, "timestampLamport": ts_envio, "origemAgencia": id_agencia},
-            headers={"Authorization": f"Bearer {token_servico}"},
-            timeout=5,
-        )
-        resposta.raise_for_status()
-        resultado = {"mensagem": "Transferência concluída (entre agências)."}
-        idempotencia.registrar(body.idempotencyKey, resultado)
-        return resultado
-    except requests.RequestException as erro:
-        # LIMITACAO CONHECIDA: se esta chamada falhar, o debito ja aplicado acima
-        # NAO e revertido - o dinheiro "desaparece" temporariamente. Resolver isso
-        # de forma correta e o assunto do Sprint 4, com uma transacao distribuida
-        # de verdade (2PC/Saga). Por enquanto, so registramos a inconsistencia no log.
+        publicar_credito(agencia_destino, {
+            "idConta": body.idDestino,
+            "valor": body.valor,
+            "vetorEnvio": ts_envio,
+            "origemAgencia": id_agencia,
+            "idTransferencia": body.idempotencyKey,
+        })
+    except Exception as erro:
+        # Sem broker nao ha como entregar o credito: estorna o debito para nao perder dinheiro.
+        contas.creditar(body.idOrigem, body.valor)
         registro.registrar("TRANSFERENCIA_FALHOU", relogio.evento_local(), {
             "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor, "erro": str(erro),
         })
-        raise HTTPException(
-            status_code=502,
-            detail="Falha ao contatar agência de destino. Débito já aplicado - inconsistência conhecida (ver Sprint 4).",
-        )
+        raise HTTPException(status_code=502, detail="Não foi possível publicar a transferência no broker. Débito estornado.")
 
-
-@router.post("/contas/{id}/creditar-remoto")
-def creditar_remoto(id: int, body: CreditoRemotoBody, request: Request, _token: dict = Depends(exigir_token_servico)):
-    contas = request.app.state.contas
-    relogio = request.app.state.relogio
-    registro = request.app.state.registro
-
-    # Ao RECEBER uma mensagem de outra agencia, o relogio de Lamport e
-    # atualizado com base no timestamp recebido - e a regra 3 do algoritmo.
-    ts = relogio.ao_receber(body.timestampLamport)
-
-    if not contas.existe(id):
-        raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
-
-    conta = contas.creditar(id, body.valor)
-    registro.registrar("TRANSFERENCIA_CREDITO_REMOTO", ts, {
-        "idConta": id, "valor": body.valor, "origemAgencia": body.origemAgencia,
-    })
-
-    return {"mensagem": "Crédito remoto aplicado.", "saldoAtual": conta["saldo"]}
+    resultado = {"mensagem": "Transferência publicada para a agência de destino (entrega assíncrona)."}
+    idempotencia.registrar(body.idempotencyKey, resultado)
+    return resultado
