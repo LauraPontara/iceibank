@@ -1,0 +1,22 @@
+Teste de resiliencia (Parte C, tarefas 3 e 4). Saida real da execucao.
+
+2026-10-04 21:01:38 agencia 1 fora do ar. saldo conta 3: 75.0
+2026-10-04 21:01:42 transferencia 3 -> 4 com agencia 1 fora do ar: HTTP 200
+2026-10-04 21:01:42 saldo conta 3 apos debito: 35.0
+
+rabbitmqctl list_queues name messages consumers
+fila-agencia-0   0   1
+fila-agencia-1   1   0      <- mensagem retida, nenhum consumidor
+fila-agencia-2   0   1
+
+Apos subir a agencia 1 de novo:
+
+rabbitmqctl list_queues name messages consumers
+fila-agencia-0   0   1
+fila-agencia-1   0   1
+fila-agencia-2   0   1
+
+Log da agencia 1 (eventos-agencia-1.jsonl):
+00:02:18 CREDITO_REMOTO_FALHOU [5, 1, 0] {'idConta': 4, 'valor': 40.0, 'origemAgencia': 0, 'motivo': 'conta nao encontrada'}
+
+login conta 4 na agencia 1 reiniciada: 401 (a conta nao existe mais, contas ficam so em memoria)
