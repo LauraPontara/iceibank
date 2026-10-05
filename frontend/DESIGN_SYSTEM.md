@@ -70,6 +70,16 @@ Escala: rótulos em caixa alta usam 11px a 12px com `letter-spacing` de 0.15em. 
 - Entrada de seções com fade e deslocamento de 12px.
 - Com `prefers-reduced-motion: reduce`, brilhos ficam estáticos e o cartão 3D não inclina.
 
+## Responsividade
+
+- Mobile first: a base é uma coluna e os breakpoints sobem a partir de 768px (grade de 3 colunas) e 1024px (layout de 2 colunas no painel e na home).
+- Itens de grid e flex que contêm texto longo ou selects usam `min-width: 0`, para que a coluna possa encolher em vez de estourar a largura da tela.
+- O cartão metal é fluido: usa container queries (`cqi`) para escalar fontes, espaçamentos e raio conforme a largura do cartão, sem breakpoints próprios.
+- Cartões usam padding fluido (`clamp(18px, 5vw, 28px)`). Em telas até 420px as abas do painel escondem os ícones.
+- Tabelas ficam dentro de um contêiner com rolagem horizontal própria, nunca na página.
+- Links de âncora passam pelo roteador, que rola uma única vez com deslocamento de 72px para não ficar sob o cabeçalho fixo.
+- Verificado de 320px a 1024px sem rolagem horizontal em todas as telas.
+
 ## Acessibilidade
 
 - Contraste mínimo AA para texto sobre `--background` e `--card`.
