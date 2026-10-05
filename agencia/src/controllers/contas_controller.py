@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import config
+from repositories.conta_repository import SaldoInsuficiente
 from auth.security import exigir_dono_ou_admin, exigir_usuario_ou_admin, hash_senha
 
 router = APIRouter()
@@ -76,14 +77,14 @@ def sacar(id: int, body: ValorBody, request: Request, token: dict = Depends(exig
     relogio = request.app.state.relogio
     registro = request.app.state.registro
 
-    conta = contas.obter(id)
-    if conta is None:
+    if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
-    if conta["saldo"] < body.valor:
-        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
 
+    try:
+        conta = contas.debitar(id, body.valor)
+    except SaldoInsuficiente:
+        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
     ts = relogio.evento_local()
-    conta = contas.debitar(id, body.valor)
     registro.registrar("SAQUE", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
     return conta_publica(conta)
