@@ -4,6 +4,7 @@ import { motion } from "motion-v";
 import { ArrowRight, Network, ShieldCheck, Clock, Zap } from "lucide-vue-next";
 import LogoMark from "../components/ui/LogoMark.vue";
 import MetalCard from "../components/ui/MetalCard.vue";
+import cartaoMetal from "../assets/metal-card.jpg";
 
 const SUAVE = [0.22, 1, 0.36, 1];
 
@@ -80,7 +81,15 @@ const elevar = {
       </motion.article>
 
       <motion.article class="surface tile grande vitrine card-sheen" v-bind="{ ...aoRolar(0.24), ...elevar }">
-        <div class="brilho-vitrine" />
+        <img
+          :src="cartaoMetal"
+          alt="Cartão metal ICEIBank preto com brilho rosé sobre mármore escuro"
+          width="1024"
+          height="640"
+          loading="lazy"
+          class="foto-vitrine"
+        />
+        <div class="veu-vitrine" />
         <div class="vitrine-texto">
           <h3>ICEI <em>Metal</em></h3>
           <p>Aço escovado, brilho rosé e zero anuidade.</p>
@@ -294,17 +303,26 @@ h3 em {
   color: white;
 }
 
-.brilho-vitrine,
+.foto-vitrine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.veu-vitrine,
 .brilho-faixa {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.brilho-vitrine {
-  background-image:
-    radial-gradient(circle 320px at 8% 115%, oklch(0.65 0.25 352 / 0.45), transparent),
-    linear-gradient(120deg, transparent 38%, oklch(0.75 0.12 352 / 0.12) 52%, transparent 66%);
+.veu-vitrine {
+  background:
+    linear-gradient(90deg, oklch(0.12 0.01 340 / 0.88) 0%, oklch(0.12 0.01 340 / 0.45) 42%, transparent 78%),
+    linear-gradient(to top, oklch(0.1 0.005 340 / 0.6), transparent 55%);
 }
 
 .brilho-faixa {
