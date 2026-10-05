@@ -54,7 +54,7 @@ app.include_router(router)
 exigir_configuracao()
 
 # Consumidor: aplica creditos publicados por outras agencias no RabbitMQ
-assinar(id_agencia, aplicar_credito_remoto(app.state.contas, app.state.relogio, app.state.registro))
+assinar(id_agencia, aplicar_credito_remoto(app.state.contas, app.state.relogio, app.state.registro, IdempotenciaRepository()))
 
 if __name__ == "__main__":
     import uvicorn
