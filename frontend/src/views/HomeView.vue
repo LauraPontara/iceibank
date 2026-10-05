@@ -80,7 +80,7 @@ const elevar = {
       </motion.article>
 
       <motion.article class="surface tile grande vitrine card-sheen" v-bind="{ ...aoRolar(0.24), ...elevar }">
-        <div class="brilho-vitrine glow-mesh" />
+        <div class="brilho-vitrine" />
         <div class="vitrine-texto">
           <h3>ICEI <em>Metal</em></h3>
           <p>Aço escovado, brilho rosé e zero anuidade.</p>
@@ -90,7 +90,7 @@ const elevar = {
 
     <section id="numeros" class="container faixa-wrap">
       <motion.div class="faixa" v-bind="aoRolar(0)">
-        <div class="glow-mesh brilho-faixa" />
+        <div class="brilho-faixa" />
         <div class="faixa-grade">
           <motion.div v-bind="aoRolar(0.1)">
             <Network :size="20" class="rosa" />
@@ -299,6 +299,19 @@ h3 em {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.brilho-vitrine {
+  background-image:
+    radial-gradient(circle 320px at 8% 115%, oklch(0.65 0.25 352 / 0.45), transparent),
+    linear-gradient(120deg, transparent 38%, oklch(0.75 0.12 352 / 0.12) 52%, transparent 66%);
+}
+
+.brilho-faixa {
+  background-image:
+    radial-gradient(circle 420px at 4% -10%, oklch(0.65 0.25 352 / 0.38), transparent),
+    radial-gradient(circle 360px at 100% 115%, oklch(0.75 0.12 352 / 0.22), transparent),
+    linear-gradient(90deg, transparent, oklch(0.65 0.25 352 / 0.06) 50%, transparent);
 }
 
 .vitrine-texto {
