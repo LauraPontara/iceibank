@@ -19,21 +19,31 @@ class TransferenciaBody(BaseModel):
 @router.post("/transferencias")
 def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
     exigir_dono_ou_admin(token, body.idOrigem)
+    idempotencia = request.app.state.idempotencia
+
+    # Idempotencia: uma chave ja concluida devolve o mesmo resultado sem debitar de novo
+    # (protege retries de rede). A reserva e atomica, entao duas requisicoes simultaneas
+    # com a mesma chave nao debitam duas vezes. Tentativas que falham liberam a chave.
+    estado, resultado_anterior = idempotencia.reservar(body.idempotencyKey)
+    if estado == "concluida":
+        return resultado_anterior
+    if estado == "em_andamento":
+        raise HTTPException(status_code=409, detail="Já existe uma transferência em andamento com esta chave.")
+
+    try:
+        resultado = _executar_transferencia(body, request)
+    except BaseException:
+        idempotencia.liberar(body.idempotencyKey)
+        raise
+    idempotencia.registrar(body.idempotencyKey, resultado)
+    return resultado
+
+
+def _executar_transferencia(body: TransferenciaBody, request: Request) -> dict:
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
     id_agencia = request.app.state.id_agencia
-    idempotencia = request.app.state.idempotencia
-
-    # Idempotencia: se essa chave ja foi usada numa transferencia CONCLUIDA
-    # com sucesso, devolve o mesmo resultado sem debitar de novo. Isso protege
-    # contra o caso classico de retry de rede (cliente reenvia a mesma
-    # requisicao porque a resposta se perdeu, achando que a primeira falhou).
-    # Chaves de tentativas que falharam (404/400/502) nao ficam gravadas aqui,
-    # para que o cliente possa tentar de novo com a mesma chave.
-    resultado_anterior = idempotencia.obter(body.idempotencyKey)
-    if resultado_anterior is not None:
-        return resultado_anterior
 
     if not contas.existe(body.idOrigem):
         raise HTTPException(status_code=404, detail="Conta de origem não encontrada nesta agência.")
@@ -60,9 +70,7 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
         registro.registrar("TRANSFERENCIA_CREDITO", ts_credito, {
             "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         })
-        resultado = {"mensagem": "Transferência concluída (mesma agência)."}
-        idempotencia.registrar(body.idempotencyKey, resultado)
-        return resultado
+        return {"mensagem": "Transferência concluída (mesma agência)."}
 
     # Caso entre agencias: em vez de chamar a outra agencia por REST, publica um
     # evento no RabbitMQ. A agencia de destino consome quando estiver disponivel;
@@ -89,6 +97,4 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
         })
         raise HTTPException(status_code=502, detail="Não foi possível publicar a transferência no broker. Débito estornado.")
 
-    resultado = {"mensagem": "Transferência publicada para a agência de destino (entrega assíncrona)."}
-    idempotencia.registrar(body.idempotencyKey, resultado)
-    return resultado
+    return {"mensagem": "Transferência publicada para a agência de destino (entrega assíncrona)."}
