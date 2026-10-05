@@ -113,11 +113,11 @@ São concorrentes. Na posição 0, V1 tem 3 e V2 tem 1, então V2 não é menor 
 
 ### 1. O que aconteceu quando a Agência 1 voltou?
 
-Derrubei a Agência 1 e transferi R$ 40 da conta 3 (Agência 0) para a conta 4 (Agência 1). A resposta foi 200 e o painel do RabbitMQ mostrou `fila-agencia-1` com 1 mensagem pronta e 0 consumidores, ou seja, a mensagem ficou retida em disco. Quando subi a Agência 1 de novo, o consumidor reconectou e a mensagem foi entregue. O log da agência registrou:
+Derrubei a Agência 1 e transferi R$ 40 da conta 3 (Agência 0) para a conta 4 (Agência 1). A resposta foi 200 e o painel do RabbitMQ (CloudAMQP) mostrou a `fila-agencia-1` com 1 mensagem pronta (Ready) enquanto as outras filas estavam vazias, ou seja, a mensagem ficou retida em disco (prints `resiliencia-fila.png` e `resiliencia-fila-2.png`). Quando subi a Agência 1 de novo, o consumidor reconectou e a mensagem foi entregue. O log da agência registrou:
 
 `CREDITO_REMOTO_FALHOU [5, 1, 0] {"idConta": 4, "valor": 40.0, "origemAgencia": 0, "motivo": "conta nao encontrada"}`
 
-A mensagem não sumiu por falha da mensageria. Ela chegou, o vetor foi atualizado pela regra de recebimento (a posição 0 passou a 5, vinda da origem), e o crédito não pôde ser aplicado porque a conta 4 não existia mais. As contas ficam só em memória, então reiniciar a agência apagou a conta. Confirmei isso tentando logar na conta 4 depois da reinicialização: resposta 401. Enquanto isso, a conta 3 já tinha sido debitada (de 75 para 35), então os R$ 40 ficaram perdidos.
+A mensagem não sumiu por falha da mensageria. Ela chegou, o vetor foi atualizado pela regra de recebimento (a posição 0 passou a 5, vinda da origem), e o crédito não pôde ser aplicado porque a conta 4 não existia mais. As contas ficam só em memória, então reiniciar a agência apagou a conta. Confirmei isso tentando logar na conta 4 depois da reinicialização: resposta 401. Enquanto isso, a conta 3 já tinha sido debitada: o log da Agência 0 mostra o `TRANSFERENCIA_DEBITO` de 40 antes do envio, então os R$ 40 ficaram perdidos.
 
 ### 2. O que melhorou em relação ao Sprint 1 e o que continua em aberto?
 
@@ -153,11 +153,21 @@ Faz sentido: criei a conta 3 na Agência 0 e a conta 4 na Agência 1 sem nenhuma
 
 Configurei uma dead-letter queue no RabbitMQ. A exchange `iceibank.mortas` (fanout, durável) está ligada à fila durável `fila-mensagens-mortas`, e as filas das agências são declaradas com o argumento `x-dead-letter-exchange` apontando para ela. Quando o consumidor não consegue aplicar um crédito, por exemplo porque a conta não existe, ele registra o evento `CREDITO_REMOTO_FALHOU` no log e rejeita a mensagem sem recolocá-la na fila (`nack` com `requeue=False`). O RabbitMQ então encaminha a mensagem para a fila de mensagens mortas, em vez de ela simplesmente desaparecer depois do ack, que era o comportamento da versão anterior.
 
-Testei transferindo da conta 3 para a conta 7 (que não existe, e que pertence à Agência 1). A resposta foi 200, o consumidor da Agência 1 rejeitou a mensagem e a fila `fila-mensagens-mortas` passou a ter 1 mensagem, com o conteúdo `{"idConta": 7, "valor": 15.0, "vetorEnvio": [3, 0, 0], "origemAgencia": 0, "idTransferencia": "dlq-1"}` e motivo `rejected`. Uma transferência válida feita logo em seguida foi aplicada normalmente.
+Testei transferindo R$ 5 da conta 3 para a conta 7 (que não existe, e que pertence à Agência 1). A resposta foi 200, o consumidor da Agência 1 rejeitou a mensagem (`CreditoRejeitado('conta 7 nao encontrada')`) e a fila `fila-mensagens-mortas` passou a ter 1 mensagem, com o conteúdo `{"idConta": 7, "valor": 5.0, "vetorEnvio": [7, 0, 0], "origemAgencia": 0, "idTransferencia": "0a932f8a-7250-4d24-baaa-a91a4aee7cdc"}`, vindo da `fila-agencia-1` e com motivo `rejected`. Uma transferência válida feita logo em seguida foi aplicada normalmente.
 
 Uma observação prática: o RabbitMQ não permite mudar os argumentos de uma fila já existente. Ao ativar a dead-letter queue sobre filas criadas antes dela, foi preciso apagá-las uma vez (`rabbitmqctl delete_queue fila-agencia-N`), e elas são recriadas com o argumento novo quando a agência sobe.
 
-Evidências em `evidencias/sprint2/`.
+## Evidências (`evidencias/sprint2/`)
+
+- `transferencia-assincrona.png`: transferência da conta 3 (Agência 0) para a conta 4 (Agência 1) por mensageria. Mostra o `Get-Date`, a resposta 200, o débito e o envio na Agência 0 e o crédito remoto na Agência 1, com os vetores `[2, 0, 0]`, `[3, 0, 0]` e `[3, 2, 0]`.
+- `resiliencia-fila.png`: Agência 1 fora do ar, transferência respondendo 200 e a `fila-agencia-1` com 1 mensagem pronta no painel do RabbitMQ.
+- `resiliencia-fila-2.png`: Agência 1 de volta, com o log `CREDITO_REMOTO_FALHOU [5, 1, 0]` por conta ausente, o login da conta 4 retornando 401 e a fila já em 0.
+- `linha-do-tempo-causal.png`: saída do `mesclar_logs.py`, com os pares concorrentes (por exemplo as criações de conta em agências diferentes) e o `Get-Date`.
+- `funcionalidade-adicional.png` e `funcionalidade-adicional-2.png`: dead-letter queue com a mensagem rejeitada na `fila-mensagens-mortas` e o conteúdo dela aberto no painel.
+
+## Regressão do JWT e do frontend
+
+Depois das mudanças deste sprint verifiquei, rodando as agências e o frontend, que o que já funcionava no Sprint 1 continua funcionando: login com JWT, consulta de saldo, depósito, saque, transferência na mesma agência e entre agências pela interface web (a mensagem de resposta agora diz que a entrega é assíncrona, e o saldo do destino é atualizado pelo consumidor). Rotas protegidas continuam respondendo 401 sem token, e um cliente só consegue operar a própria conta (403 nas outras). O particionamento por `id % 3` segue valendo na criação de contas. Os testes de unidade do relógio vetorial passam (`python -m unittest discover -s tests`).
 
 ## Nota de uso de IA (Sprint 2)
 
