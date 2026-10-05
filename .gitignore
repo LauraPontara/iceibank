@@ -13,3 +13,8 @@ desktop.ini
 
 # Config local de ferramentas de IA/editor
 .claude/
+
+# Arquivos instalados pela skill motion-ai
+.agents/
+.codex/
+.mcp.json
