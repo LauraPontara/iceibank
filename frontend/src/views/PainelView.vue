@@ -64,7 +64,7 @@ onMounted(atualizar);
 </script>
 
 <template>
-  <main class="container painel">
+  <main v-if="estado.sessao" class="container painel">
     <header class="topo">
       <div>
         <p class="eyebrow">Olá{{ primeiroNome ? `, ${primeiroNome}` : "" }}</p>
