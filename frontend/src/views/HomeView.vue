@@ -17,7 +17,7 @@ import MetalCard from "../components/ui/MetalCard.vue";
         </p>
         <div class="cta">
           <RouterLink to="/abrir-conta" class="btn-primary">Abrir sua conta <ArrowRight :size="16" /></RouterLink>
-          <a href="#recursos" class="btn-ghost">Conhecer o cartão</a>
+          <RouterLink to="/#recursos" class="btn-ghost">Conhecer o cartão</RouterLink>
         </div>
         <ul class="garantias muted">
           <li>Sem tarifas escondidas</li>
@@ -55,7 +55,7 @@ import MetalCard from "../components/ui/MetalCard.vue";
       <article class="surface tile">
         <span class="icone"><Network :size="18" /></span>
         <h3>Entre agências</h3>
-        <p class="muted">Contas particionadas em 3 agências independentes que conversam entre si.</p>
+        <p class="muted">Contas particionadas em 3 agências independentes que se falam por mensageria.</p>
       </article>
 
       <article class="surface tile grande vitrine card-sheen">
@@ -78,8 +78,8 @@ import MetalCard from "../components/ui/MetalCard.vue";
           </div>
           <div>
             <Clock :size="20" class="rosa" />
-            <p class="numero rosa">Lamport</p>
-            <p>Cada evento recebe um carimbo de relógio lógico para ordenar a história.</p>
+            <p class="numero rosa">Vetorial</p>
+            <p>Cada evento carrega um vetor de contadores, e dá para saber o que é causal e o que é concorrente.</p>
           </div>
           <div>
             <Zap :size="20" class="rosa" />
@@ -160,7 +160,7 @@ h3 em {
 
 .halo {
   position: absolute;
-  inset: -40px;
+  inset: -16px;
   border-radius: 40px;
   background: color-mix(in oklch, var(--primary) 20%, transparent);
   filter: blur(60px);
@@ -179,9 +179,13 @@ h3 em {
   padding-bottom: 32px;
 }
 
+.bento > * {
+  min-width: 0;
+}
+
 .bento article {
   border-radius: 20px;
-  padding: 28px;
+  padding: clamp(20px, 5vw, 28px);
 }
 
 .bento h3 {
@@ -214,7 +218,7 @@ h3 em {
 
 .mini {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 12px;
   margin-top: 24px;
 }
@@ -292,7 +296,7 @@ h3 em {
 .faixa {
   position: relative;
   overflow: hidden;
-  padding: 48px;
+  padding: clamp(24px, 6vw, 48px);
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--ink);
@@ -315,7 +319,7 @@ h3 em {
 .numero {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: clamp(28px, 8vw, 40px);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
