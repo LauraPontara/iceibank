@@ -7,6 +7,7 @@ import { criarConta } from "../services/contas";
 import { useSessao } from "../composables/useSessao";
 import { useMensagem } from "../composables/useMensagem";
 import AuthCard from "../components/ui/AuthCard.vue";
+import PasswordField from "../components/ui/PasswordField.vue";
 
 const router = useRouter();
 const { iniciar } = useSessao();
@@ -61,14 +62,8 @@ async function abrirConta() {
         <span>Nome completo</span>
         <input v-model="nome" type="text" minlength="3" placeholder="Ex.: Laura Pontara" required autofocus />
       </label>
-      <label class="field">
-        <span>Senha</span>
-        <input v-model="senha" type="password" minlength="4" autocomplete="new-password" required />
-      </label>
-      <label class="field">
-        <span>Confirmar senha</span>
-        <input v-model="confirmacao" type="password" autocomplete="new-password" required />
-      </label>
+      <PasswordField v-model="senha" label="Senha" autocomplete="new-password" minlength="4" />
+      <PasswordField v-model="confirmacao" label="Confirmar senha" autocomplete="new-password" />
       <label class="field">
         <span>Número da conta (opcional)</span>
         <input v-model="numero" type="number" min="0" step="1" placeholder="Deixe em branco para gerar automaticamente" />
