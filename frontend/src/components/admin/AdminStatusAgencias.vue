@@ -11,7 +11,7 @@ defineProps({ agencias: { type: Array, required: true } });
       </div>
       <template v-if="item.online">
         <p class="dado"><strong>{{ item.status.totalContas }}</strong> <span class="muted">contas</span></p>
-        <p class="lamport mono muted">relógio vetorial · [{{ item.status.relogioVetorial.join(", ") }}]</p>
+        <p class="vetor mono muted">relógio vetorial · [{{ item.status.relogioVetorial.join(", ") }}]</p>
       </template>
       <p v-else class="muted offline">Fora do ar{{ item.erro ? `: ${item.erro}` : "" }}</p>
     </li>
@@ -53,7 +53,7 @@ defineProps({ agencias: { type: Array, required: true } });
   font-size: 13px;
 }
 
-.lamport {
+.vetor {
   margin-top: 4px;
   font-size: 11px;
 }
