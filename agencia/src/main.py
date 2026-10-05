@@ -8,7 +8,9 @@ import config
 from repositories.conta_repository import ContaRepository
 from repositories.idempotencia_repository import IdempotenciaRepository
 from routes import router
+from services.credito_remoto import aplicar_credito_remoto
 from services.event_log import RegistroEventos
+from services.mensageria import assinar, exigir_configuracao
 from services.relogio_vetorial import RelogioVetorial
 
 id_agencia = int(os.environ.get("AGENCIA_ID", "0"))
@@ -48,6 +50,11 @@ app.state.contas = ContaRepository()
 app.state.idempotencia = IdempotenciaRepository()
 
 app.include_router(router)
+
+exigir_configuracao()
+
+# Consumidor: aplica creditos publicados por outras agencias no RabbitMQ
+assinar(id_agencia, aplicar_credito_remoto(app.state.contas, app.state.relogio, app.state.registro))
 
 if __name__ == "__main__":
     import uvicorn
