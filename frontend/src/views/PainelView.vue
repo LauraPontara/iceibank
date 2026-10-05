@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { AnimatePresence, motion } from "motion-v";
 import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Copy, Check, RefreshCw } from "lucide-vue-next";
 import { useSessao } from "../composables/useSessao";
 import { useContaApi } from "../composables/useContaApi";
@@ -85,6 +86,7 @@ onMounted(atualizar);
           :titular="conta?.nomeAluno ?? 'Titular'"
           :conta="estado.sessao.contaId"
           :saldo="conta ? formatarMoeda(conta.saldo) : null"
+          :valor="conta ? conta.saldo : null"
         />
         <button type="button" class="btn-ghost atualizar" :disabled="atualizando" @click="atualizar">
           <RefreshCw :size="14" :class="{ girando: atualizando }" /> Atualizar saldo
@@ -103,12 +105,28 @@ onMounted(atualizar);
             :class="['aba', { ativa: aba === item.id }]"
             @click="aba = item.id"
           >
-            <component :is="item.icone" :size="16" /> {{ item.rotulo }}
+            <motion.span
+              v-if="aba === item.id"
+              layout-id="aba-ativa"
+              class="pilula"
+              :transition="{ type: 'spring', bounce: 0.15, visualDuration: 0.35 }"
+            />
+            <span class="aba-rotulo"><component :is="item.icone" :size="16" /> {{ item.rotulo }}</span>
           </button>
         </div>
-        <DepositoForm v-if="aba === 'deposito'" @concluido="aoConcluir" />
-        <SaqueForm v-else-if="aba === 'saque'" @concluido="aoConcluir" />
-        <TransferenciaForm v-else @concluido="aoConcluir" />
+        <AnimatePresence mode="wait" :initial="false">
+          <motion.div
+            :key="aba"
+            :initial="{ opacity: 0, transform: 'translateY(8px)' }"
+            :animate="{ opacity: 1, transform: 'translateY(0px)' }"
+            :exit="{ opacity: 0, transform: 'translateY(-8px)' }"
+            :transition="{ duration: 0.18 }"
+          >
+            <DepositoForm v-if="aba === 'deposito'" @concluido="aoConcluir" />
+            <SaqueForm v-else-if="aba === 'saque'" @concluido="aoConcluir" />
+            <TransferenciaForm v-else @concluido="aoConcluir" />
+          </motion.div>
+        </AnimatePresence>
       </section>
     </div>
 
@@ -201,6 +219,7 @@ h2 {
 }
 
 .aba {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +232,7 @@ h2 {
   font-weight: 500;
   color: var(--muted-foreground);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .aba:hover {
@@ -221,8 +240,22 @@ h2 {
 }
 
 .aba.ativa {
-  background: var(--primary);
   color: var(--primary-foreground);
+}
+
+.pilula {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  box-shadow: 0 8px 24px -10px var(--primary);
+}
+
+.aba-rotulo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .extrato {
