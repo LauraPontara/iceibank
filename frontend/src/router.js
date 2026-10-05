@@ -18,7 +18,7 @@ const router = createRouter({
     { path: "/admin", component: AdminView, meta: { exigeAdmin: true } },
     { path: "/:resto(.*)*", redirect: "/" },
   ],
-  scrollBehavior: (to) => (to.hash ? { el: to.hash, behavior: "smooth" } : { top: 0 }),
+  scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 72, behavior: "smooth" } : { top: 0 }),
 });
 
 router.beforeEach((to) => {
