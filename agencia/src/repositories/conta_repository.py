@@ -1,6 +1,10 @@
 import threading
 
 
+class SaldoInsuficiente(Exception):
+    pass
+
+
 class ContaRepository:
     """Armazena as contas da agencia em memoria. Toda leitura e escrita de
     contas passa por aqui, para que a persistencia possa ser trocada depois
@@ -41,5 +45,7 @@ class ContaRepository:
     def debitar(self, id_conta: int, valor: float) -> dict:
         with self._lock:
             conta = self._contas[id_conta]
+            if conta["saldo"] < valor:
+                raise SaldoInsuficiente()
             conta["saldo"] -= valor
             return dict(conta)
