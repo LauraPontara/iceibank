@@ -124,6 +124,11 @@ h2 {
   align-content: start;
 }
 
+.grade > *,
+.coluna > * {
+  min-width: 0;
+}
+
 @media (min-width: 1024px) {
   .grade {
     grid-template-columns: 5fr 7fr;
