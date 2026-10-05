@@ -76,8 +76,10 @@ const estiloPalco = computed(() => ({
 
 <style scoped>
 .cena {
+  container-type: inline-size;
   perspective: 1100px;
   width: 100%;
+  min-width: 0;
   max-width: 440px;
   margin: 0 auto;
   cursor: pointer;
@@ -99,8 +101,8 @@ const estiloPalco = computed(() => ({
   position: absolute;
   inset: 0;
   overflow: hidden;
-  padding: 28px;
-  border-radius: 28px;
+  padding: clamp(16px, 6.4cqi, 28px);
+  border-radius: clamp(18px, 6.4cqi, 28px);
   box-shadow: 0 0 0 1px oklch(1 0 0 / 10%), 0 40px 80px -30px rgba(0, 0, 0, 0.6);
   backface-visibility: hidden;
   color: white;
@@ -150,20 +152,22 @@ const estiloPalco = computed(() => ({
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 36px;
+  margin-top: clamp(14px, 8cqi, 36px);
 }
 
 .chip-ouro {
-  width: 36px;
-  height: 36px;
+  flex: none;
+  width: clamp(26px, 8cqi, 36px);
+  height: clamp(26px, 8cqi, 36px);
   border-radius: 6px;
   background: color-mix(in oklch, var(--primary) 80%, transparent);
   box-shadow: 0 0 0 1px oklch(1 0 0 / 20%), 0 0 20px -2px var(--primary);
 }
 
 .numero {
-  font-size: 14px;
-  letter-spacing: 0.35em;
+  font-size: clamp(11px, 3.2cqi, 14px);
+  letter-spacing: 0.28em;
+  white-space: nowrap;
   opacity: 0.7;
 }
 
@@ -171,7 +175,7 @@ const estiloPalco = computed(() => ({
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: 28px;
+  margin-top: clamp(12px, 6.4cqi, 28px);
 }
 
 .rotulo {
@@ -183,7 +187,7 @@ const estiloPalco = computed(() => ({
 
 .valor {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: clamp(16px, 5cqi, 22px);
   font-weight: 500;
 }
 
@@ -199,8 +203,8 @@ const estiloPalco = computed(() => ({
 }
 
 .tarja {
-  height: 40px;
-  margin: -28px -28px 24px;
+  height: clamp(28px, 9cqi, 40px);
+  margin: calc(-1 * clamp(16px, 6.4cqi, 28px)) calc(-1 * clamp(16px, 6.4cqi, 28px)) 16px;
   background: oklch(0.05 0 0);
 }
 
