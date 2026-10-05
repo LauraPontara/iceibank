@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src
 from services.relogio_vetorial import comparar_vetores
 
 pasta_dados = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+if not os.path.isdir(pasta_dados):
+    raise SystemExit("Pasta data/ não encontrada. Rode as agências para gerar os logs de eventos.")
 arquivos = [f for f in os.listdir(pasta_dados) if f.endswith(".jsonl")]
 
 todos_eventos = []
