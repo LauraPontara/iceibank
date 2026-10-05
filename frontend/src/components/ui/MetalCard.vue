@@ -19,9 +19,12 @@ const inclinacaoY = useSpring(0, MOLA);
 const giro = useSpring(0, { stiffness: 120, damping: 18 });
 const brilhoX = useSpring(50, MOLA);
 const brilhoY = useSpring(50, MOLA);
+const brilhoOpacidade = useSpring(0, { stiffness: 180, damping: 28 });
+const faixaInicio = useTransform(() => brilhoX.get() - 24);
+const faixaFim = useTransform(() => brilhoX.get() + 24);
 
 const rotateY = useTransform(() => inclinacaoY.get() + giro.get());
-const brilho = useMotionTemplate`radial-gradient(circle at ${brilhoX}% ${brilhoY}%, oklch(0.8 0.18 352 / 0.35), transparent 45%)`;
+const brilho = useMotionTemplate`radial-gradient(circle at ${brilhoX}% ${brilhoY}%, oklch(0.85 0.1 352 / 0.2), transparent 26%), linear-gradient(115deg, transparent ${faixaInicio}%, oklch(1 0 0 / 0.1) ${brilhoX}%, transparent ${faixaFim}%)`;
 
 const finais = computed(() => String(props.conta).padStart(4, "0").slice(-4));
 const mostraSaldo = computed(() => props.valor !== null || props.saldo !== null);
@@ -35,6 +38,7 @@ function aoMover(evento) {
   inclinacaoY.set((px - 0.5) * 20);
   brilhoX.set(px * 100);
   brilhoY.set(py * 100);
+  brilhoOpacidade.set(1);
 }
 
 function aoSair() {
@@ -42,6 +46,7 @@ function aoSair() {
   inclinacaoY.set(0);
   brilhoX.set(50);
   brilhoY.set(50);
+  brilhoOpacidade.set(0);
 }
 
 function virar() {
@@ -67,7 +72,7 @@ function virar() {
   >
     <motion.div class="palco" :style="{ rotateX: inclinacaoX, rotateY }" aria-hidden="true">
       <div class="face frente card-sheen">
-        <motion.div class="brilho" :style="{ background: brilho }" />
+        <motion.div class="brilho" :style="{ background: brilho, opacity: brilhoOpacidade }" />
         <div class="topo">
           <span class="marca">ICEIBank</span>
           <span class="tipo">Metal</span>
@@ -121,7 +126,11 @@ function virar() {
   overflow: hidden;
   padding: clamp(16px, 6.4cqi, 28px);
   border-radius: clamp(18px, 6.4cqi, 28px);
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 10%), 0 40px 80px -30px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 10%),
+    inset 0 1px 0 oklch(1 0 0 / 16%),
+    0 40px 80px -30px rgba(0, 0, 0, 0.6),
+    0 24px 70px -34px color-mix(in oklch, var(--primary) 70%, transparent);
   backface-visibility: hidden;
   color: white;
 }
