@@ -3,7 +3,15 @@ Trabalho Prático do Laboratório de Desenvolvimento de Aplicações Móveis e D
 
 ## RabbitMQ (Sprint 2)
 
-As agências trocam créditos entre si por mensageria. O RabbitMQ roda local em Docker:
+As agências trocam créditos entre si por mensageria. O broker pode ser uma instância gratuita no CloudAMQP (plano Little Lemur, o caminho principal do roteiro) ou um RabbitMQ local em Docker. A aplicação funciona igual nos dois casos, só muda o valor de `RABBITMQ_URL`.
+
+Com o CloudAMQP, copie a AMQP URL da instância (ela contém a senha, então não a coloque em commits) e defina a variável antes de iniciar cada agência:
+
+```powershell
+$env:RABBITMQ_URL = "amqps://usuario:senha@host.cloudamqp.com/vhost"
+```
+
+Para rodar local, em Docker:
 
 ```powershell
 docker run -d --name rabbitmq-iceibank -p 5672:5672 -p 15672:15672 rabbitmq:3-management
