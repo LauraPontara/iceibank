@@ -1,4 +1,5 @@
 <script setup>
+import { motion } from "motion-v";
 import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight } from "lucide-vue-next";
 import { formatarDataHora, formatarMoeda } from "../services/formato";
 
@@ -17,7 +18,14 @@ function negativo(tipo) {
     Nenhuma movimentação ainda. Faça um depósito para começar.
   </p>
   <ul v-else class="lista">
-    <li v-for="item in itens" :key="item.id ?? item.em" class="linha">
+    <motion.li
+      v-for="(item, indice) in itens"
+      :key="item.id ?? item.em"
+      class="linha"
+      :initial="{ opacity: 0, transform: 'translateX(-10px)' }"
+      :animate="{ opacity: 1, transform: 'translateX(0px)' }"
+      :transition="{ duration: 0.3, delay: Math.min(indice, 6) * 0.04 }"
+    >
       <span class="icone"><component :is="ICONES[item.tipo]" :size="16" /></span>
       <div class="texto">
         <p class="titulo">{{ ROTULOS[item.tipo] }}</p>
@@ -28,7 +36,7 @@ function negativo(tipo) {
       <span :class="['valor', 'mono', { positivo: !negativo(item.tipo) }]">
         {{ negativo(item.tipo) ? "−" : "+" }} {{ formatarMoeda(item.valor) }}
       </span>
-    </li>
+    </motion.li>
   </ul>
 </template>
 
