@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import config
+from repositories.conta_repository import SaldoInsuficiente
 from auth.security import exigir_dono_ou_admin, exigir_usuario_ou_admin
 from services.mensageria import publicar_credito
 
@@ -34,17 +35,17 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
     if resultado_anterior is not None:
         return resultado_anterior
 
-    conta_origem = contas.obter(body.idOrigem)
-    if conta_origem is None:
+    if not contas.existe(body.idOrigem):
         raise HTTPException(status_code=404, detail="Conta de origem não encontrada nesta agência.")
-    if conta_origem["saldo"] < body.valor:
-        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
 
     agencia_destino = config.agencia_responsavel(body.idDestino)
 
     # O debito e sempre local, pois esta agencia e a dona da conta de origem
+    try:
+        contas.debitar(body.idOrigem, body.valor)
+    except SaldoInsuficiente:
+        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
     ts_debito = relogio.evento_local()
-    contas.debitar(body.idOrigem, body.valor)
     registro.registrar("TRANSFERENCIA_DEBITO", ts_debito, {
         "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         "idempotencyKey": body.idempotencyKey,
