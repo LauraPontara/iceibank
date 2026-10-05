@@ -1,5 +1,6 @@
 <script setup>
 import { RouterView } from "vue-router";
+import { AnimatePresence, MotionConfig, motion } from "motion-v";
 import { X } from "lucide-vue-next";
 import { useMensagem } from "./composables/useMensagem";
 import AmbientBackground from "./components/ui/AmbientBackground.vue";
@@ -9,15 +10,28 @@ const { estado: mensagem, limpar } = useMensagem();
 </script>
 
 <template>
-  <AmbientBackground />
-  <SiteHeader />
-  <div class="aviso container" aria-live="polite">
-    <div v-if="mensagem.texto" :class="['alert', mensagem.tipo]" :role="mensagem.tipo === 'erro' ? 'alert' : 'status'">
-      <span>{{ mensagem.texto }}</span>
-      <button type="button" class="fechar" aria-label="Fechar aviso" @click="limpar"><X :size="14" /></button>
+  <MotionConfig reduced-motion="user">
+    <AmbientBackground />
+    <SiteHeader />
+    <div class="aviso container" aria-live="polite">
+      <AnimatePresence>
+        <motion.div
+          v-if="mensagem.texto"
+          :key="mensagem.texto"
+          :class="['alert', mensagem.tipo]"
+          :role="mensagem.tipo === 'erro' ? 'alert' : 'status'"
+          :initial="{ opacity: 0, transform: 'translateY(-12px) scale(0.98)' }"
+          :animate="{ opacity: 1, transform: 'translateY(0px) scale(1)' }"
+          :exit="{ opacity: 0, transform: 'translateY(-8px) scale(0.98)' }"
+          :transition="{ type: 'spring', bounce: 0.2, visualDuration: 0.35 }"
+        >
+          <span>{{ mensagem.texto }}</span>
+          <button type="button" class="fechar" aria-label="Fechar aviso" @click="limpar"><X :size="14" /></button>
+        </motion.div>
+      </AnimatePresence>
     </div>
-  </div>
-  <RouterView />
+    <RouterView />
+  </MotionConfig>
 </template>
 
 <style scoped>
