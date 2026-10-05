@@ -43,19 +43,16 @@ onMounted(atualizar);
     </section>
 
     <div class="grade">
-      <div class="coluna">
-        <section class="surface">
-          <h2>Nova conta</h2>
-          <p class="muted nota">Cria a conta direto na agência responsável (id % 3).</p>
-          <AdminNovaContaForm @criada="atualizar" />
-        </section>
-        <section class="surface">
-          <h2>Transferência entre contas</h2>
-          <p class="muted nota">Move saldo entre quaisquer contas, mesmo de agências diferentes.</p>
-          <AdminTransferenciaForm :contas="contas" @concluida="atualizar" />
-        </section>
-      </div>
-
+      <section class="surface">
+        <h2>Transferência entre contas</h2>
+        <p class="muted nota">Move saldo entre quaisquer contas, mesmo de agências diferentes.</p>
+        <AdminTransferenciaForm :contas="contas" @concluida="atualizar" />
+      </section>
+      <section class="surface">
+        <h2>Nova conta</h2>
+        <p class="muted nota">Cria a conta direto na agência responsável (id % 3).</p>
+        <AdminNovaContaForm @criada="atualizar" />
+      </section>
       <section class="surface contas">
         <h2>Contas</h2>
         <p class="muted nota">{{ contas.length }} conta(s) nas agências online. Depósito e saque usam o valor da linha.</p>
@@ -118,21 +115,18 @@ h2 {
   margin-top: 16px;
 }
 
-.coluna {
-  display: grid;
-  gap: 16px;
-  align-content: start;
-}
-
-.grade > *,
-.coluna > * {
+.grade > * {
   min-width: 0;
 }
 
 @media (min-width: 1024px) {
   .grade {
-    grid-template-columns: 5fr 7fr;
-    align-items: start;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: stretch;
+  }
+
+  .contas {
+    grid-column: 1 / -1;
   }
 }
 
