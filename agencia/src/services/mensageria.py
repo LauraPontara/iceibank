@@ -71,13 +71,15 @@ def assinar(id_agencia, ao_receber_mensagem):
     def ao_chegar(canal, metodo, _propriedades, corpo):
         try:
             ao_receber_mensagem(json.loads(corpo))
-            canal.basic_ack(delivery_tag=metodo.delivery_tag)
         except Exception as erro:
             print(f"[mensageria] falha ao processar mensagem: {erro!r}")
             canal.basic_nack(delivery_tag=metodo.delivery_tag, requeue=False)
+            return
+        canal.basic_ack(delivery_tag=metodo.delivery_tag)
 
     def laco():
         while True:
+            conexao = None
             try:
                 conexao = _conectar()
                 canal = conexao.channel()
@@ -86,8 +88,11 @@ def assinar(id_agencia, ao_receber_mensagem):
                 canal.basic_consume(queue=nome_fila(id_agencia), on_message_callback=ao_chegar)
                 print(f"[mensageria] consumindo {nome_fila(id_agencia)}")
                 canal.start_consuming()
-            except pika.exceptions.AMQPError as erro:
+            except Exception as erro:
                 print(f"[mensageria] conexão perdida ({erro!r}); tentando de novo em {INTERVALO_RECONEXAO_S}s")
                 time.sleep(INTERVALO_RECONEXAO_S)
+            finally:
+                if conexao is not None and conexao.is_open:
+                    conexao.close()
 
     threading.Thread(target=laco, name=f"consumidor-agencia-{id_agencia}", daemon=True).start()
