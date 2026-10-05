@@ -91,7 +91,7 @@ Usei o Claude (Anthropic), através do Claude Code, como apoio ao longo deste sp
 
 # Respostas Sprint 2 - ICEIBank
 
-Linguagem: Python com FastAPI, a mesma do Sprint 1. Mensageria com RabbitMQ via biblioteca pika. Em vez do CloudAMQP usei o RabbitMQ local em Docker (`docker run -d --name rabbitmq-iceibank -p 5672:5672 -p 15672:15672 rabbitmq:3-management`), alternativa prevista na seção 4.1 do roteiro, com `RABBITMQ_URL=amqp://guest:guest@localhost:5672/`.
+Linguagem: Python com FastAPI, a mesma do Sprint 1. Mensageria com RabbitMQ via biblioteca pika. O desenvolvimento e os primeiros testes foram feitos com o RabbitMQ local em Docker (`docker run -d --name rabbitmq-iceibank -p 5672:5672 -p 15672:15672 rabbitmq:3-management`, `RABBITMQ_URL=amqp://guest:guest@localhost:5672/`), alternativa prevista na seção 4.1 do roteiro. Depois criei a instância `iceibank` no CloudAMQP (plano Little Lemur, Azure Brazil South) e repeti na nuvem a transferência assíncrona, o teste de resiliência e a dead-letter queue, com o mesmo resultado. A única mudança entre os dois ambientes é o valor de `RABBITMQ_URL`.
 
 Antes de começar o sprint, a camada de dados foi separada dos controllers em repositórios (`ContaRepository` e `IdempotenciaRepository`), e foi corrigida a falha em que um cliente logado conseguia operar a conta de outro (agora o token precisa ser do dono da conta, ou de um administrador).
 
