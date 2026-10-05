@@ -343,6 +343,13 @@ h3 em {
   gap: 40px;
 }
 
+.faixa-grade > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .faixa-grade p:not(.numero) {
   margin-top: 8px;
   max-width: 26ch;
@@ -404,6 +411,11 @@ h3 em {
 
   .faixa-grade {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .faixa-grade > * {
+    align-items: flex-start;
+    text-align: left;
   }
 }
 </style>
