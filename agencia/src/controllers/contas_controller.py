@@ -12,6 +12,8 @@ from services.relogio_vetorial import comparar_vetores
 
 router = APIRouter()
 
+TIPOS_SINCRONIZAVEIS = ("DEPOSITO", "SAQUE", "TRANSFERENCIA")
+
 
 class CriarContaBody(BaseModel):
     id: int
@@ -119,6 +121,10 @@ def sincronizar_operacao_pendente(
 
     if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
+    if body.tipo not in TIPOS_SINCRONIZAVEIS:
+        raise HTTPException(status_code=400, detail="Tipo de operação pendente não suportado.")
+    if body.tipo == "TRANSFERENCIA" and body.idDestino is None:
+        raise HTTPException(status_code=400, detail="Transferência pendente sem conta de destino.")
 
     # Se a resposta de uma sincronizacao se perder na rede, o reenvio devolve o mesmo
     # resultado em vez de virar um conflito falso (o vetor ja avancou com a propria operacao).
@@ -149,10 +155,28 @@ def sincronizar_operacao_pendente(
                     },
                 )
 
-            _aplicar_operacao_pendente(id, body, request)
+            if body.tipo == "DEPOSITO":
+                contas.creditar(id, body.valor)
+            elif body.tipo == "SAQUE":
+                try:
+                    contas.debitar(id, body.valor)
+                except SaldoInsuficiente:
+                    raise HTTPException(status_code=400, detail="Saldo insuficiente.")
             ts = relogio.evento_local()
             registro.registrar("SINCRONIZACAO_OFFLINE", ts, {"id": id, "tipo": body.tipo, "valor": body.valor})
             resultado = {**conta_publica(contas.obter(id)), "vetorAtual": ts}
+
+        # A transferencia pode publicar no broker, entao roda fora do lock: uma rede
+        # lenta nao pode segurar as mensagens do Bully, que tem timeout de 1s.
+        if body.tipo == "TRANSFERENCIA":
+            executar_transferencia(
+                TransferenciaBody(
+                    idOrigem=id, idDestino=body.idDestino, valor=body.valor, idempotencyKey=body.idempotencyKey or str(uuid4())
+                ),
+                request,
+            )
+            with relogio.exclusivo():
+                resultado = {**conta_publica(contas.obter(id)), "vetorAtual": relogio.atual()}
     except BaseException:
         if body.idempotencyKey is not None:
             idempotencia.liberar(body.idempotencyKey)
@@ -161,26 +185,3 @@ def sincronizar_operacao_pendente(
     if body.idempotencyKey is not None:
         idempotencia.registrar(body.idempotencyKey, resultado)
     return resultado
-
-
-def _aplicar_operacao_pendente(id: int, body: SincronizarBody, request: Request) -> None:
-    contas = request.app.state.contas
-
-    if body.tipo == "DEPOSITO":
-        contas.creditar(id, body.valor)
-    elif body.tipo == "SAQUE":
-        try:
-            contas.debitar(id, body.valor)
-        except SaldoInsuficiente:
-            raise HTTPException(status_code=400, detail="Saldo insuficiente.")
-    elif body.tipo == "TRANSFERENCIA":
-        if body.idDestino is None:
-            raise HTTPException(status_code=400, detail="Transferência pendente sem conta de destino.")
-        executar_transferencia(
-            TransferenciaBody(
-                idOrigem=id, idDestino=body.idDestino, valor=body.valor, idempotencyKey=body.idempotencyKey or str(uuid4())
-            ),
-            request,
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Tipo de operação pendente não suportado.")
