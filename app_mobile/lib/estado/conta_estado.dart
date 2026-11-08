@@ -128,14 +128,21 @@ class ContaEstado extends ChangeNotifier {
     }
   }
 
+  // Uma resposta pode chegar depois do logout: ela vale para o banco local,
+  // mas nao pode aparecer na tela de quem entrou em seguida.
+  bool _ehContaDaSessao(int contaId) => _sessao.sessao?.contaId == contaId;
+
   Future<void> _guardarConta(ContaLocal nova) async {
-    conta = nova;
+    if (_ehContaDaSessao(nova.id)) conta = nova;
     await _banco.salvarConta(nova);
   }
 
   Future<void> _recarregarListas(int contaId) async {
-    operacoes = await _banco.listarOperacoes(contaId);
-    atividade = await _banco.listarAtividade(contaId);
+    final pendentes = await _banco.listarOperacoes(contaId);
+    final recentes = await _banco.listarAtividade(contaId);
+    if (!_ehContaDaSessao(contaId)) return;
+    operacoes = pendentes;
+    atividade = recentes;
   }
 
   Future<void> _encerrarSessaoExpirada() async {
@@ -155,6 +162,7 @@ class ContaEstado extends ChangeNotifier {
       _executar(TipoOperacao.transferencia, valor, idDestino: idDestino);
 
   Future<ResultadoOperacao> _executar(TipoOperacao tipo, double valor, {int? idDestino}) => _emSerie(() async {
+        if (_sessao.sessao == null) throw SemConexao('Sessão encerrada.');
         final chave = const Uuid().v4();
         // Com fila existente a operacao entra atras dela, para manter a ordem
         if (operacoes.isNotEmpty) return _enfileirar(chave, tipo, valor, idDestino);
@@ -199,7 +207,7 @@ class ContaEstado extends ChangeNotifier {
 
   Future<ResultadoOperacao> _enfileirar(String chave, TipoOperacao tipo, double valor, int? idDestino) async {
     final atual = conta;
-    if (atual == null) throw SemConexao('Sem conexão e sem dados locais desta conta.');
+    if (atual == null || !_ehContaDaSessao(atual.id)) throw SemConexao('Sem conexão e sem dados locais desta conta.');
     if (tipo != TipoOperacao.deposito && valor > saldoExibido!) {
       throw ErroApi(400, 'Saldo provisório insuficiente para esta operação.');
     }
@@ -224,7 +232,7 @@ class ContaEstado extends ChangeNotifier {
     if (sessao == null) return;
     var sincronizadas = 0;
 
-    while (_sessao.sessao != null) {
+    while (identical(_sessao.sessao, sessao)) {
       await _recarregarListas(sessao.contaId);
       if (operacoes.any((o) => o.estado == EstadoOperacao.conflito)) break;
       final proxima = operacoes.where((o) => o.estado == EstadoOperacao.pendente).firstOrNull;
