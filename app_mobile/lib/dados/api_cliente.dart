@@ -39,7 +39,8 @@ Future<Map<String, dynamic>> chamarApi(
     'Content-Type': 'application/json',
     if (token != null) 'Authorization': 'Bearer $token',
   };
-  final uri = Uri.parse('$agenciaUrl$caminho');
+  final uri = Uri.tryParse('$agenciaUrl$caminho');
+  if (uri == null) throw SemConexao('O endereço da agência é inválido.');
 
   final http.Response resposta;
   try {

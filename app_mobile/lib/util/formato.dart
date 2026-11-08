@@ -11,4 +11,7 @@ String formatarDataHora(DateTime momento) => _dataHora.format(momento);
 String formatarHora(DateTime momento) => _hora.format(momento);
 
 /// Aceita tanto 12,50 quanto 12.50.
-double? lerValor(String texto) => double.tryParse(texto.trim().replaceAll(',', '.'));
+double? lerValor(String texto) {
+  final valor = double.tryParse(texto.trim().replaceAll(',', '.'));
+  return valor != null && valor.isFinite ? valor : null;
+}
