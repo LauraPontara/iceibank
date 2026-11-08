@@ -7,10 +7,12 @@ OFFSET = 30
 NUMERO_AGENCIAS = 3
 PORTA_BASE = 4000 + OFFSET
 
+# 127.0.0.1 em vez de localhost: no Windows o localhost tenta IPv6 antes e perde
+# cerca de 1s em cada chamada, o mesmo valor do timeout da eleicao de lider.
 AGENCIAS = [
-    {"id": 0, "url": f"http://localhost:{PORTA_BASE}"},
-    {"id": 1, "url": f"http://localhost:{PORTA_BASE + 1}"},
-    {"id": 2, "url": f"http://localhost:{PORTA_BASE + 2}"},
+    {"id": 0, "url": f"http://127.0.0.1:{PORTA_BASE}"},
+    {"id": 1, "url": f"http://127.0.0.1:{PORTA_BASE + 1}"},
+    {"id": 2, "url": f"http://127.0.0.1:{PORTA_BASE + 2}"},
 ]
 
 
