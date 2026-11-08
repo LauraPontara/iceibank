@@ -23,6 +23,8 @@ void main() {
     await entrar(t, conta, senhaDeTeste);
     await esperar(t, find.textContaining('500,00'));
     await esperar(t, find.text('Agência 2'));
+    await esperar(t, find.text('Líder'));
+    await esperar(t, find.textContaining('3 de 3 agências ativas concordam'));
 
     await informarValor(t, '50');
     await confirmar(t, 'Depositar');
