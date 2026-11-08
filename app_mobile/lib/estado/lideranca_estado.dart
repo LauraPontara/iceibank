@@ -23,8 +23,11 @@ class LiderancaEstado extends ChangeNotifier {
   StatusLideranca status = StatusLideranca.consultando;
   int? lider;
   int? liderAnterior;
-  int? consultadaEm;
   DateTime? trocaEm;
+  int concordam = 0;
+
+  /// Ids das agencias que responderam na ultima consulta.
+  Set<int> ativas = const {};
 
   void iniciar() {
     _consultar();
@@ -40,52 +43,66 @@ class LiderancaEstado extends ChangeNotifier {
     if (_consultaEmAndamento) return;
     _consultaEmAndamento = true;
     try {
-      _aplicar(await _perguntarAsAgencias());
+      final respostas = await Future.wait(_preferencias.agencias.map(_perguntar));
+      _aplicar(respostas.whereType<_Resposta>().toList());
     } finally {
       _consultaEmAndamento = false;
     }
   }
 
-  /// Tenta as agencias conhecidas em ordem e so desiste depois da ultima.
-  Future<_Resposta?> _perguntarAsAgencias() async {
-    _Resposta? semLider;
-    for (final agencia in _preferencias.agencias) {
-      try {
-        final dados = await chamarApi(agencia.url, '/bully/lider', tempoLimite: tempoLimiteConsultaLider);
-        final resposta = _Resposta(agencia, dados['liderAtual'] as int?);
-        if (resposta.lider != null) return resposta;
-        semLider = resposta;
-      } on SemConexao {
-        continue;
-      } on ErroApi {
-        continue;
-      }
+  /// Pergunta a todas ao mesmo tempo: se uma nao responder, as outras cobrem,
+  /// e o painel ainda descobre quais estao no ar.
+  Future<_Resposta?> _perguntar(Agencia agencia) async {
+    try {
+      final dados = await chamarApi(agencia.url, '/bully/lider', tempoLimite: tempoLimiteConsultaLider);
+      return _Resposta(agencia.id, dados['liderAtual'] as int?);
+    } on SemConexao {
+      return null;
+    } on ErroApi {
+      return null;
     }
-    return semLider;
   }
 
-  void _aplicar(_Resposta? resposta) {
-    if (resposta == null) {
+  void _aplicar(List<_Resposta> respostas) {
+    ativas = respostas.map((r) => r.agencia).toSet();
+    if (respostas.isEmpty) {
       status = StatusLideranca.semResposta;
-    } else if (resposta.lider == null) {
-      status = StatusLideranca.emEleicao;
-      consultadaEm = resposta.agencia.id;
-    } else {
-      if (lider != null && lider != resposta.lider) {
+      concordam = 0;
+    } else if (_escolherLider(respostas) case final escolhida?) {
+      if (lider != null && lider != escolhida) {
         liderAnterior = lider;
         trocaEm = DateTime.now();
       }
-      lider = resposta.lider;
-      consultadaEm = resposta.agencia.id;
+      lider = escolhida;
+      concordam = respostas.where((r) => r.lider == escolhida).length;
       status = StatusLideranca.definida;
+    } else {
+      status = StatusLideranca.emEleicao;
+      concordam = 0;
     }
     notifyListeners();
+  }
+
+  /// Durante uma transicao as agencias podem discordar. Vale quem tem mais votos,
+  /// ignorando lider que ja nao responde; no empate, o maior id, como no Bully.
+  int? _escolherLider(List<_Resposta> respostas) {
+    final votos = <int, int>{};
+    for (final resposta in respostas) {
+      final candidata = resposta.lider;
+      if (candidata != null && ativas.contains(candidata)) {
+        votos[candidata] = (votos[candidata] ?? 0) + 1;
+      }
+    }
+    if (votos.isEmpty) return null;
+    final ordenadas = votos.entries.toList()
+      ..sort((a, b) => b.value != a.value ? b.value - a.value : b.key - a.key);
+    return ordenadas.first.key;
   }
 }
 
 class _Resposta {
   const _Resposta(this.agencia, this.lider);
 
-  final Agencia agencia;
+  final int agencia;
   final int? lider;
 }
