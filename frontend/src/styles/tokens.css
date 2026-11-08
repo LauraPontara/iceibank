@@ -20,6 +20,19 @@
   --destructive: oklch(0.577 0.245 27.325);
   --ink: oklch(0.16 0.008 340);
 
+  --metal-brilho: oklch(1 0 0 / 14%);
+  --metal-inicio: oklch(0.62 0.25 352);
+  --metal-fim: oklch(0.5 0.21 352);
+  --metal-fim-parada: 100%;
+  --metal-texto: oklch(1 0 0);
+  --metal-texto-suave: oklch(1 0 0 / 92%);
+  --metal-rotulo: oklch(1 0 0 / 90%);
+  --metal-borda: oklch(1 0 0 / 25%);
+  --metal-tarja: oklch(0.3 0.13 352);
+  --metal-sombra: oklch(0.62 0.25 352 / 55%);
+  --metal-chip: oklch(1 0 0 / 28%);
+  --metal-chip-brilho: oklch(1 0 0 / 45%);
+
   --font-display: "Space Grotesk Variable", system-ui, sans-serif;
   --font-body: "Inter Variable", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
@@ -36,4 +49,17 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --destructive: oklch(0.704 0.191 22.216);
+
+  --metal-brilho: oklch(1 0 0 / 16%);
+  --metal-inicio: oklch(0.2 0.01 340);
+  --metal-fim: oklch(0.1 0.005 340);
+  --metal-fim-parada: 70%;
+  --metal-texto: oklch(1 0 0);
+  --metal-texto-suave: oklch(1 0 0 / 65%);
+  --metal-rotulo: oklch(1 0 0 / 40%);
+  --metal-borda: oklch(1 0 0 / 10%);
+  --metal-tarja: oklch(0.05 0 0);
+  --metal-sombra: rgba(0, 0, 0, 0.6);
+  --metal-chip: color-mix(in oklch, var(--primary) 80%, transparent);
+  --metal-chip-brilho: var(--primary);
 }

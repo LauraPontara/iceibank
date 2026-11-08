@@ -71,7 +71,7 @@ function virar() {
     @keydown.space.prevent="virar"
   >
     <motion.div class="palco" :style="{ rotateX: inclinacaoX, rotateY }" aria-hidden="true">
-      <div class="face frente card-sheen">
+      <div class="face frente">
         <motion.div class="brilho" :style="{ background: brilho, opacity: brilhoOpacidade }" />
         <div class="topo">
           <span class="marca">ICEIBank</span>
@@ -92,7 +92,7 @@ function virar() {
           <span class="bandeira">VISA</span>
         </div>
       </div>
-      <div class="face verso card-sheen">
+      <div class="face verso">
         <div class="tarja" />
         <p class="rotulo">Titular</p>
         <p class="valor pequeno">{{ titular }}</p>
@@ -126,13 +126,16 @@ function virar() {
   overflow: hidden;
   padding: clamp(16px, 6.4cqi, 28px);
   border-radius: clamp(18px, 6.4cqi, 28px);
+  background:
+    linear-gradient(135deg, var(--metal-brilho) 0%, oklch(1 0 0 / 2%) 42%, transparent 55%),
+    linear-gradient(160deg, var(--metal-inicio) 0%, var(--metal-fim) var(--metal-fim-parada));
   box-shadow:
-    0 0 0 1px oklch(1 0 0 / 10%),
+    0 0 0 1px var(--metal-borda),
     inset 0 1px 0 oklch(1 0 0 / 16%),
-    0 40px 80px -30px rgba(0, 0, 0, 0.6),
+    0 40px 80px -30px var(--metal-sombra),
     0 24px 70px -34px color-mix(in oklch, var(--primary) 70%, transparent);
   backface-visibility: hidden;
-  color: white;
+  color: var(--metal-texto);
 }
 
 .verso {
@@ -171,7 +174,7 @@ function virar() {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  opacity: 0.4;
+  color: var(--metal-rotulo);
 }
 
 .linha-chip {
@@ -186,15 +189,15 @@ function virar() {
   width: clamp(26px, 8cqi, 36px);
   height: clamp(26px, 8cqi, 36px);
   border-radius: 6px;
-  background: color-mix(in oklch, var(--primary) 80%, transparent);
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 20%), 0 0 20px -2px var(--primary);
+  background: var(--metal-chip);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 20%), 0 0 20px -2px var(--metal-chip-brilho);
 }
 
 .numero {
   font-size: clamp(11px, 3.2cqi, 14px);
   letter-spacing: 0.28em;
   white-space: nowrap;
-  opacity: 0.7;
+  color: var(--metal-texto-suave);
 }
 
 .base {
@@ -208,7 +211,7 @@ function virar() {
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  opacity: 0.4;
+  color: var(--metal-rotulo);
 }
 
 .valor {
@@ -225,12 +228,12 @@ function virar() {
 .bandeira {
   font-size: 14px;
   font-weight: 500;
-  opacity: 0.6;
+  color: var(--metal-texto-suave);
 }
 
 .tarja {
   height: clamp(28px, 9cqi, 40px);
   margin: calc(-1 * clamp(16px, 6.4cqi, 28px)) calc(-1 * clamp(16px, 6.4cqi, 28px)) 16px;
-  background: oklch(0.05 0 0);
+  background: var(--metal-tarja);
 }
 </style>
