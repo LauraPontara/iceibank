@@ -1,4 +1,5 @@
 import threading
+from contextlib import contextmanager
 
 
 class RelogioVetorial:
@@ -8,7 +9,14 @@ class RelogioVetorial:
     def __init__(self, id_agencia, numero_agencias):
         self.id_agencia = id_agencia
         self.vetor = [0] * numero_agencias
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
+
+    @contextmanager
+    def exclusivo(self):
+        """Segura o relogio durante um bloco, para que comparar o vetor e aplicar
+        uma operacao aconteca sem nenhum outro evento no meio."""
+        with self._lock:
+            yield
 
     def evento_local(self):
         with self._lock:
