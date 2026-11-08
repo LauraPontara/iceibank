@@ -8,10 +8,13 @@ import '../estado/preferencias.dart';
 import '../estado/sessao_estado.dart';
 import '../tema/tipografia.dart';
 import '../tema/tokens.dart';
+import '../util/formato.dart';
 import '../widgets/base.dart';
 import '../widgets/cartao_metal.dart';
+import '../widgets/cartao_pendencias.dart';
 import '../widgets/formulario_operacao.dart';
 import '../widgets/fundo_ambiente.dart';
+import '../widgets/lista_atividade.dart';
 import '../widgets/logo.dart';
 import '../widgets/painel_lideranca.dart';
 
@@ -57,6 +60,26 @@ class _PainelTelaState extends State<PainelTela> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _sair() async {
+    final sessao = context.read<SessaoEstado>();
+    final quantidade = _conta.operacoes.length;
+    if (quantidade > 0) {
+      final confirmado = await showDialog<bool>(
+        context: context,
+        builder: (contexto) => AlertDialog(
+          title: const Text('Sair com operações pendentes?'),
+          content: Text('$quantidade ${quantidade == 1 ? 'operação fica guardada' : 'operações ficam guardadas'} neste aparelho e voltam a sincronizar no próximo login desta conta.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(contexto, false), child: const Text('Cancelar')),
+            TextButton(onPressed: () => Navigator.pop(contexto, true), child: const Text('Sair')),
+          ],
+        ),
+      );
+      if (confirmado != true) return;
+    }
+    await sessao.encerrar();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -89,7 +112,7 @@ class _PainelTelaState extends State<PainelTela> with WidgetsBindingObserver {
                     ),
                     IconButton(
                       tooltip: 'Sair',
-                      onPressed: () => context.read<SessaoEstado>().encerrar(),
+                      onPressed: _sair,
                       icon: Icon(LucideIcons.logOut, size: 18, color: t.mutedForeground),
                     ),
                   ],
@@ -103,20 +126,44 @@ class _PainelTelaState extends State<PainelTela> with WidgetsBindingObserver {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    ChipStatus(texto: sessao.agencia.nome),
+                    ChipStatus(texto: sessao.agencia.nome, desligado: estado.semConexao),
                     ChipStatus(texto: 'Conta $contaId', semPonto: true, monoespacado: true),
+                    if (estado.semConexao) const ChipStatus(texto: 'Offline', desligado: true),
                   ],
                 ),
                 const SizedBox(height: 24),
+                if (estado.semConexao) ...[
+                  Alerta(
+                    tipo: TipoAlerta.info,
+                    texto: conta == null
+                        ? 'Sem conexão com a agência.'
+                        : 'Sem conexão com a agência. Mostrando o último dado conhecido, de ${formatarDataHora(conta.atualizadaEm)}.',
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (estado.avisoSincronizacao != null) ...[
+                  Alerta(tipo: TipoAlerta.sucesso, texto: estado.avisoSincronizacao!),
+                  const SizedBox(height: 16),
+                ],
                 if (estado.erro != null) ...[
                   Alerta(texto: estado.erro!),
                   const SizedBox(height: 16),
                 ],
-                Center(child: CartaoMetal(titular: conta?.nomeAluno ?? 'Titular', conta: contaId, saldo: conta?.saldo)),
+                Center(
+                  child: CartaoMetal(
+                    titular: conta?.nomeAluno ?? 'Titular',
+                    conta: contaId,
+                    saldo: estado.saldoExibido,
+                    rotuloSaldo: estado.temPendentes ? 'Saldo provisório' : 'Saldo',
+                  ),
+                ),
                 const SizedBox(height: 24),
+                const CartaoPendencias(),
                 const PainelLideranca(),
                 const SizedBox(height: 16),
                 const FormularioOperacao(),
+                const SizedBox(height: 16),
+                ListaAtividade(itens: estado.atividade),
               ],
             ),
           ),
