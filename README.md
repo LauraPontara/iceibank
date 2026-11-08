@@ -50,6 +50,15 @@ py src/main.py
 
 Use o mesmo usuário e a mesma senha nas 3 agências, porque o token de administrador é aceito por todas.
 
+## Demonstração
+
+O script `demo.ps1` sobe o RabbitMQ, as 3 agências e o site, cria as contas de teste, instala o app no celular conectado por USB e mostra no final os dados de login e os saldos. O celular precisa estar no mesmo Wi-Fi do computador.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\demo.ps1
+powershell -ExecutionPolicy Bypass -File .\demo.ps1 -Parar
+```
+
 ## Eleição de líder (Sprint 3)
 
 Ao subir, cada agência dispara uma eleição pelo algoritmo de Bully e passa a verificar a líder a cada 3 segundos. Para consultar quem é a líder e reconstruir o histórico de lideranças a partir dos logs:
