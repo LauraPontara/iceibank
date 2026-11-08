@@ -49,3 +49,29 @@ py src/main.py
 ```
 
 Use o mesmo usuário e a mesma senha nas 3 agências, porque o token de administrador é aceito por todas.
+
+## Eleição de líder (Sprint 3)
+
+Ao subir, cada agência dispara uma eleição pelo algoritmo de Bully e passa a verificar a líder a cada 3 segundos. Para consultar quem é a líder e reconstruir o histórico de lideranças a partir dos logs:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:4030/bully/lider" -Method Get
+cd agencia
+python historico_lideranca.py
+```
+
+## App Flutter (Sprint 3)
+
+O app fica em `app_mobile/` e fala com as agências pela rede Wi-Fi, então celular e computador precisam estar na mesma rede. Com o celular conectado por USB e a depuração ativa:
+
+```powershell
+cd app_mobile
+flutter pub get
+flutter run --dart-define=AGENCIA_HOST=<IP do computador no Wi-Fi>
+```
+
+O IP também pode ser trocado na tela de login. Os testes de integração rodam no próprio celular, com as 3 agências no ar:
+
+```powershell
+flutter test integration_test --dart-define=AGENCIA_HOST=<IP do computador no Wi-Fi>
+```
