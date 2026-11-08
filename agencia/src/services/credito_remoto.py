@@ -14,17 +14,20 @@ def aplicar_credito_remoto(contas, relogio, registro, creditos_processados):
         if not creditos_processados.registrar_se_novo(f"credito:{mensagem['idTransferencia']}"):
             return
 
-        # Regra 3 do relogio vetorial: ao receber, funde o vetor recebido com o local.
-        vetor = relogio.ao_receber(mensagem["vetorEnvio"])
+        with relogio.exclusivo():
+            # Regra 3 do relogio vetorial: ao receber, funde o vetor recebido com o local.
+            vetor = relogio.ao_receber(mensagem["vetorEnvio"])
+            conta_existe = contas.existe(id_conta)
+            if conta_existe:
+                contas.creditar(id_conta, valor)
 
-        if not contas.existe(id_conta):
+        if not conta_existe:
             registro.registrar("CREDITO_REMOTO_FALHOU", vetor, {
                 "idConta": id_conta, "valor": valor, "origemAgencia": origem, "motivo": "conta nao encontrada",
             })
             # Rejeitar a mensagem (nack sem requeue) a manda para a dead-letter queue, onde pode ser inspecionada.
             raise CreditoRejeitado(f"conta {id_conta} nao encontrada")
 
-        contas.creditar(id_conta, valor)
         registro.registrar("TRANSFERENCIA_CREDITO_REMOTO", vetor, {
             "idConta": id_conta, "valor": valor, "origemAgencia": origem,
         })

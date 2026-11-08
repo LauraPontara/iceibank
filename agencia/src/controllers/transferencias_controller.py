@@ -51,11 +51,12 @@ def executar_transferencia(body: TransferenciaBody, request: Request) -> dict:
     agencia_destino = config.agencia_responsavel(body.idDestino)
 
     # O debito e sempre local, pois esta agencia e a dona da conta de origem
-    try:
-        contas.debitar(body.idOrigem, body.valor)
-    except SaldoInsuficiente:
-        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
-    ts_debito = relogio.evento_local()
+    with relogio.exclusivo():
+        try:
+            contas.debitar(body.idOrigem, body.valor)
+        except SaldoInsuficiente:
+            raise HTTPException(status_code=400, detail="Saldo insuficiente.")
+        ts_debito = relogio.evento_local()
     registro.registrar("TRANSFERENCIA_DEBITO", ts_debito, {
         "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         "idempotencyKey": body.idempotencyKey,
@@ -65,8 +66,9 @@ def executar_transferencia(body: TransferenciaBody, request: Request) -> dict:
         if not contas.existe(body.idDestino):
             contas.creditar(body.idOrigem, body.valor)
             raise HTTPException(status_code=404, detail="Conta de destino não encontrada.")
-        ts_credito = relogio.evento_local()
-        contas.creditar(body.idDestino, body.valor)
+        with relogio.exclusivo():
+            ts_credito = relogio.evento_local()
+            contas.creditar(body.idDestino, body.valor)
         registro.registrar("TRANSFERENCIA_CREDITO", ts_credito, {
             "idOrigem": body.idOrigem, "idDestino": body.idDestino, "valor": body.valor,
         })
