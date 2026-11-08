@@ -165,7 +165,7 @@ class ContaEstado extends ChangeNotifier {
         if (_sessao.sessao == null) throw SemConexao('Sessão encerrada.');
         final chave = const Uuid().v4();
         // Com fila existente a operacao entra atras dela, para manter a ordem
-        if (operacoes.isNotEmpty) return _enfileirar(chave, tipo, valor, idDestino);
+        if (operacoes.any((o) => o.estado != EstadoOperacao.rejeitada)) return _enfileirar(chave, tipo, valor, idDestino);
         try {
           return await _executarNaAgencia(chave, tipo, valor, idDestino);
         } on SemConexao {
