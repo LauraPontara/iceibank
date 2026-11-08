@@ -38,13 +38,6 @@ Future<void> depositarPorFora(int conta, double valor) async {
 Future<void> depositar(WidgetTester t, String valor) async {
   await informarValor(t, valor);
   await confirmar(t, 'Depositar');
-  await irAoTopo(t);
-}
-
-/// O saldo, os avisos e as pendencias ficam no topo, e a lista so monta o que esta perto da tela.
-Future<void> irAoTopo(WidgetTester t) async {
-  t.state<ScrollableState>(find.byType(Scrollable).first).position.jumpTo(0);
-  await t.pump(const Duration(milliseconds: 300));
 }
 
 void main() {

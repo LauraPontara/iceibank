@@ -69,4 +69,11 @@ Future<void> informarValor(WidgetTester t, String valor) async {
 
 Future<void> confirmar(WidgetTester t, String rotulo) async {
   await tocarVisivel(t, find.text(rotulo, skipOffstage: false).last);
+  await irAoTopo(t);
+}
+
+/// O saldo, os avisos e as pendencias ficam no topo, e a lista so monta o que esta perto da tela.
+Future<void> irAoTopo(WidgetTester t) async {
+  t.state<ScrollableState>(find.byType(Scrollable).first).position.jumpTo(0);
+  await t.pump(const Duration(milliseconds: 300));
 }
