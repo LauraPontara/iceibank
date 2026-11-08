@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 
 import '../tema/tokens.dart';
 
+const _duracaoDeriva = Duration(seconds: 24);
+const _intervaloDeriva = Duration(milliseconds: 200);
+
 /// Glow mesh do design system: tres brilhos rosa que derivam devagar.
-/// Fica estatico quando o sistema pede para reduzir animacoes.
+/// O movimento e de poucos pixels, entao 5 quadros por segundo bastam e poupam
+/// bateria. Fica estatico quando o sistema pede para reduzir animacoes.
 class FundoAmbiente extends StatefulWidget {
   const FundoAmbiente({super.key, required this.child});
 
@@ -15,22 +20,27 @@ class FundoAmbiente extends StatefulWidget {
   State<FundoAmbiente> createState() => _FundoAmbienteState();
 }
 
-class _FundoAmbienteState extends State<FundoAmbiente> with SingleTickerProviderStateMixin {
-  late final AnimationController _deriva = AnimationController(vsync: this, duration: const Duration(seconds: 24));
+class _FundoAmbienteState extends State<FundoAmbiente> {
+  final _progresso = ValueNotifier<double>(0);
+  Timer? _temporizador;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (MediaQuery.disableAnimationsOf(context)) {
-      _deriva.stop();
-    } else if (!_deriva.isAnimating) {
-      _deriva.repeat();
+      _temporizador?.cancel();
+      _temporizador = null;
+    } else {
+      _temporizador ??= Timer.periodic(_intervaloDeriva, (_) {
+        _progresso.value = (_progresso.value + _intervaloDeriva.inMilliseconds / _duracaoDeriva.inMilliseconds) % 1;
+      });
     }
   }
 
   @override
   void dispose() {
-    _deriva.dispose();
+    _temporizador?.cancel();
+    _progresso.dispose();
     super.dispose();
   }
 
@@ -43,12 +53,7 @@ class _FundoAmbienteState extends State<FundoAmbiente> with SingleTickerProvider
         fit: StackFit.expand,
         children: [
           IgnorePointer(
-            child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: _deriva,
-                builder: (context, _) => CustomPaint(painter: _PintorBrilho(t.primary, _deriva.value)),
-              ),
-            ),
+            child: RepaintBoundary(child: CustomPaint(painter: _PintorBrilho(t.primary, _progresso))),
           ),
           widget.child,
         ],
@@ -58,13 +63,13 @@ class _FundoAmbienteState extends State<FundoAmbiente> with SingleTickerProvider
 }
 
 class _PintorBrilho extends CustomPainter {
-  const _PintorBrilho(this.cor, this.progresso);
+  _PintorBrilho(this.cor, this.progresso) : super(repaint: progresso);
 
   final Color cor;
-  final double progresso;
+  final ValueNotifier<double> progresso;
 
   void _brilho(Canvas canvas, Size tamanho, double x, double y, double raio, double opacidade, double fase) {
-    final angulo = 2 * pi * (progresso + fase);
+    final angulo = 2 * pi * (progresso.value + fase);
     final centro = Offset(tamanho.width * x + cos(angulo) * 24, tamanho.height * y + sin(angulo) * 18);
     final raioPx = tamanho.longestSide * raio;
     final tinta = Paint()
@@ -81,5 +86,5 @@ class _PintorBrilho extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PintorBrilho antigo) => antigo.progresso != progresso || antigo.cor != cor;
+  bool shouldRepaint(_PintorBrilho antigo) => antigo.cor != cor;
 }

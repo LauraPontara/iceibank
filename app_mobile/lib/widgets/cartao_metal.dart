@@ -32,7 +32,10 @@ class _CartaoMetalState extends State<CartaoMetal> {
       label: 'Cartão ICEIBank Metal final $ultimos, titular ${widget.titular}. Toque para virar o cartão.',
       child: GestureDetector(
         onTap: () => setState(() => _virado = !_virado),
-        child: ConstrainedBox(
+        // A altura vem da proporcao do cartao, entao a fonte do sistema nao pode crescer sem limite
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.1,
+          child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: AspectRatio(
             aspectRatio: 1.586,
@@ -58,6 +61,7 @@ class _CartaoMetalState extends State<CartaoMetal> {
               },
             ),
           ),
+        ),
         ),
       ),
     );
