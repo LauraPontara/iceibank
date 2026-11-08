@@ -204,7 +204,7 @@ A regra só precisa ser uma ordem total que todos os processos conheçam, para q
 
 ### 1. E se o heartbeat fosse de 100ms ou de 60 segundos?
 
-Com 100ms a queda seria percebida quase na hora, mas cada agência faria 10 requisições por segundo só para isso, e um atraso momentâneo da rede viraria falsa suspeita com muito mais frequência, disparando eleições desnecessárias. Com 60 segundos o custo seria desprezível, porém o sistema poderia ficar quase um minuto apontando para uma líder morta. O intervalo de 3 segundos fica entre os dois: no meu teste a queda foi detectada e a nova líder estava definida cerca de 1 segundo depois da detecção, com poucas requisições por segundo no total.
+Com 100ms a queda seria percebida quase na hora, mas cada agência faria 10 requisições por segundo só para isso, e um atraso momentâneo da rede viraria falsa suspeita com muito mais frequência, disparando eleições desnecessárias. Com 60 segundos o custo seria desprezível, porém o sistema poderia ficar quase um minuto apontando para uma líder morta. O intervalo de 3 segundos fica entre os dois: nos meus testes a nova líder estava definida entre 1 e 2 segundos depois da detecção da queda, com poucas requisições por segundo no total.
 
 ### 2. A agência que volta "tomar" a liderança é desejável? Que problema pode causar?
 
@@ -270,7 +270,7 @@ O painel de liderança mostra o estado de cada uma das 3 agências: "Ativa", "L�
 
 - `eleicao-inicial.png`: as 3 agências concordando que a Agência 2 é a líder depois de subirem juntas.
 - `failover.png`: a Agência 2 sendo derrubada e as 2 restantes concordando com a Agência 1.
-- `historico-lideranca.png`: saída do `historico_lideranca.py`, com a linha do tempo Agência 2, depois Agência 1, depois Agência 2 ao voltar.
+- `historico-lideranca.png` e `historico-lideranca-2.png`: saída do `historico_lideranca.py`, com os eventos de eleição e, no segundo print, a linha do tempo completa: Agência 2, depois Agência 1, depois Agência 2 ao voltar, em duas rodadas de queda da líder.
 - `conflito-sincronizacao.png`: resposta 409 ao sincronizar com o vetor antigo e sucesso ao repetir com o `vetorAtual` devolvido.
 - `app-lider-atual.png`: o app mostrando a líder atual.
 - `app-failover.png`: o painel atualizado sozinho depois da queda, com "Última troca: Agência 2 → Agência 1".
