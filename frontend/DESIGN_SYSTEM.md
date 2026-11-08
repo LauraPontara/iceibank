@@ -28,6 +28,9 @@ Todas as cores são variáveis CSS semânticas. Os componentes nunca usam valore
 | `--input` | branco 15% | oklch(0.92 0.008 350) | Borda de campos |
 | `--destructive` | oklch(0.704 0.191 22) | oklch(0.577 0.245 27) | Erros e saídas |
 | `--ink` | oklch(0.16 0.008 340) | igual | Blocos sempre escuros |
+| `--metal-inicio` / `--metal-fim` | grafite | rosa da marca, escurecendo em degradê | Fundo do cartão metal |
+| `--metal-texto` / `--metal-texto-suave` / `--metal-rotulo` | branco com transparência | branco | Textos do cartão metal |
+| `--metal-brilho` / `--metal-borda` / `--metal-tarja` / `--metal-sombra` / `--metal-chip` / `--metal-chip-brilho` | neutros | branco translúcido e tons de rosa | Acabamento do cartão metal |
 
 ## Tipografia
 
@@ -56,7 +59,7 @@ Escala: rótulos em caixa alta usam 11px a 12px com `letter-spacing` de 0.15em. 
 - **Tile (`.tile`):** cartão da grade bento que sobe 3px no hover.
 - **Campo (`.field`):** rótulo em caixa alta pequena, entrada com borda `--input` e foco rosa.
 - **Chip (`.chip`):** pílula pequena com ponto colorido, usada para status de agência e tipos de operação.
-- **Cartão metal (`MetalCard`):** cartão 3D que inclina conforme o mouse, com brilho que acompanha o cursor e verso ao clicar.
+- **Cartão metal (`MetalCard`):** cartão 3D que inclina conforme o mouse, com brilho que acompanha o cursor e verso ao clicar. Grafite no tema escuro e rosa da marca no tema claro, escurecendo em degradê, com textos brancos.
 
 ## Efeitos de fundo
 
