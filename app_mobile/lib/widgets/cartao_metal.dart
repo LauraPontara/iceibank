@@ -36,32 +36,32 @@ class _CartaoMetalState extends State<CartaoMetal> {
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.1,
           child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: AspectRatio(
-            aspectRatio: 1.586,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(end: _virado ? pi : 0),
-              duration: reduzido ? Duration.zero : const Duration(milliseconds: 600),
-              curve: Curves.easeOutBack,
-              builder: (context, angulo, _) {
-                final mostrandoVerso = angulo > pi / 2;
-                return Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.0012)
-                    ..rotateY(angulo),
-                  child: mostrandoVerso
-                      ? Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.rotationY(pi),
-                          child: _Verso(titular: widget.titular, conta: widget.conta),
-                        )
-                      : _Frente(ultimos: ultimos, saldo: widget.saldo, rotuloSaldo: widget.rotuloSaldo),
-                );
-              },
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: AspectRatio(
+              aspectRatio: 1.586,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: _virado ? pi : 0),
+                duration: reduzido ? Duration.zero : const Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+                builder: (context, angulo, _) {
+                  final mostrandoVerso = angulo > pi / 2;
+                  return Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.0012)
+                      ..rotateY(angulo),
+                    child: mostrandoVerso
+                        ? Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.rotationY(pi),
+                            child: _Verso(titular: widget.titular, conta: widget.conta),
+                          )
+                        : _Frente(ultimos: ultimos, saldo: widget.saldo, rotuloSaldo: widget.rotuloSaldo),
+                  );
+                },
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -69,19 +69,19 @@ class _CartaoMetalState extends State<CartaoMetal> {
 }
 
 BoxDecoration _decoracaoFace(Tokens t) => BoxDecoration(
-      borderRadius: BorderRadius.circular(26),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF3A3237), Color(0xFF191417), Color(0xFF040304)],
-        stops: [0, 0.42, 1],
-      ),
-      border: Border.all(color: const Color(0x29FFFFFF)),
-      boxShadow: [
-        BoxShadow(color: t.primary.withValues(alpha: 0.4), blurRadius: 60, offset: const Offset(0, 24), spreadRadius: -30),
-        const BoxShadow(color: Color(0x80000000), blurRadius: 60, offset: Offset(0, 36), spreadRadius: -24),
-      ],
-    );
+  borderRadius: BorderRadius.circular(26),
+  gradient: const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF3A3237), Color(0xFF191417), Color(0xFF040304)],
+    stops: [0, 0.42, 1],
+  ),
+  border: Border.all(color: const Color(0x29FFFFFF)),
+  boxShadow: [
+    BoxShadow(color: t.primary.withValues(alpha: 0.4), blurRadius: 60, offset: const Offset(0, 24), spreadRadius: -30),
+    const BoxShadow(color: Color(0x80000000), blurRadius: 60, offset: Offset(0, 36), spreadRadius: -24),
+  ],
+);
 
 const _branco = Colors.white;
 final _rotulo = corpo(10, peso: 500, espacamento: 2, cor: _branco.withValues(alpha: 0.45));
@@ -186,7 +186,12 @@ class _Verso extends StatelessWidget {
               children: [
                 Text('TITULAR', style: _rotulo),
                 const SizedBox(height: 2),
-                Text(titular, style: display(16, peso: 500, cor: _branco), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  titular,
+                  style: display(16, peso: 500, cor: _branco),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 12),
                 Text('CONTA', style: _rotulo),
                 const SizedBox(height: 2),
