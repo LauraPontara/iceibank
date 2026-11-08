@@ -31,7 +31,7 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
         raise HTTPException(status_code=409, detail="Já existe uma transferência em andamento com esta chave.")
 
     try:
-        resultado = _executar_transferencia(body, request)
+        resultado = executar_transferencia(body, request)
     except BaseException:
         idempotencia.liberar(body.idempotencyKey)
         raise
@@ -39,7 +39,7 @@ def transferir(body: TransferenciaBody, request: Request, token: dict = Depends(
     return resultado
 
 
-def _executar_transferencia(body: TransferenciaBody, request: Request) -> dict:
+def executar_transferencia(body: TransferenciaBody, request: Request) -> dict:
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
