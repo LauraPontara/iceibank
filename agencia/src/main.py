@@ -1,4 +1,6 @@
 import os
+import threading
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +10,7 @@ import config
 from repositories.conta_repository import ContaRepository
 from repositories.idempotencia_repository import IdempotenciaRepository
 from routes import router
+from services.bully_service import ServicoBully
 from services.credito_remoto import aplicar_credito_remoto
 from services.event_log import RegistroEventos
 from services.mensageria import assinar, exigir_configuracao
@@ -19,6 +22,8 @@ agencia_config = next((a for a in config.AGENCIAS if a["id"] == id_agencia), Non
 if agencia_config is None:
     raise SystemExit(f"Agência {id_agencia} não configurada em config.py")
 
+ATRASO_ELEICAO_INICIAL_S = 1
+
 
 class RespostaJsonUtf8(JSONResponse):
     # O Invoke-RestMethod do Windows PowerShell 5.1 le a resposta como
@@ -27,7 +32,15 @@ class RespostaJsonUtf8(JSONResponse):
     media_type = "application/json; charset=utf-8"
 
 
-app = FastAPI(title=f"ICEIBank - Agência {id_agencia}", default_response_class=RespostaJsonUtf8)
+@asynccontextmanager
+async def ciclo_de_vida(app: FastAPI):
+    # O uvicorn so abre a porta depois deste ponto: o atraso garante que a agencia
+    # ja consiga receber respostas e anuncios quando a eleicao comecar.
+    threading.Timer(ATRASO_ELEICAO_INICIAL_S, app.state.bully.iniciar_eleicao).start()
+    yield
+
+
+app = FastAPI(title=f"ICEIBank - Agência {id_agencia}", default_response_class=RespostaJsonUtf8, lifespan=ciclo_de_vida)
 
 
 @app.exception_handler(HTTPException)
@@ -48,6 +61,7 @@ app.state.relogio = RelogioVetorial(id_agencia, config.NUMERO_AGENCIAS)
 app.state.registro = RegistroEventos(f"agencia-{id_agencia}")
 app.state.contas = ContaRepository()
 app.state.idempotencia = IdempotenciaRepository()
+app.state.bully = ServicoBully(id_agencia, app.state.relogio, app.state.registro)
 
 app.include_router(router)
 
