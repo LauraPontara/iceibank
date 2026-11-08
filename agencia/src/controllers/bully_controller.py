@@ -1,17 +1,19 @@
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+import config
 
 router = APIRouter()
 
 
 class EleicaoBody(BaseModel):
-    origemId: int
-    vetorEnvio: list[int]
+    origemId: int = Field(ge=0, lt=config.NUMERO_AGENCIAS)
+    vetorEnvio: list[int] = Field(min_length=config.NUMERO_AGENCIAS, max_length=config.NUMERO_AGENCIAS)
 
 
 class CoordenadorBody(BaseModel):
-    liderId: int
-    vetorEnvio: list[int]
+    liderId: int = Field(ge=0, lt=config.NUMERO_AGENCIAS)
+    vetorEnvio: list[int] = Field(min_length=config.NUMERO_AGENCIAS, max_length=config.NUMERO_AGENCIAS)
 
 
 @router.post("/bully/eleicao")
