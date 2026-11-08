@@ -1,10 +1,12 @@
 import threading
+import time
 
 import requests
 
 import config
 
 TIMEOUT_S = 1
+INTERVALO_HEARTBEAT_S = 3
 
 
 class ServicoBully:
@@ -107,3 +109,32 @@ class ServicoBully:
     def obter_lider_atual(self):
         with self._lock:
             return self._lider_atual
+
+    def verificar_lider(self):
+        lider = self.obter_lider_atual()
+        if lider is None:
+            self.iniciar_eleicao()
+            return
+        if lider == self.id_agencia:
+            return
+
+        if self._agencia_responde(lider):
+            return
+
+        self.registro.registrar("LIDER_NAO_RESPONDEU", self.relogio.evento_local(), {"liderAtual": lider, "agencia": self.id_agencia})
+        with self._lock:
+            # So esquece a lider antiga se nenhum anuncio novo chegou durante a verificacao
+            if self._lider_atual == lider:
+                self._lider_atual = None
+        self.iniciar_eleicao()
+
+    def iniciar_heartbeat(self, intervalo_s=INTERVALO_HEARTBEAT_S):
+        def laco():
+            while True:
+                time.sleep(intervalo_s)
+                try:
+                    self.verificar_lider()
+                except Exception as erro:
+                    print(f"[bully] falha no heartbeat: {erro!r}")
+
+        threading.Thread(target=laco, name=f"heartbeat-agencia-{self.id_agencia}", daemon=True).start()

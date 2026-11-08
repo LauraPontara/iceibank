@@ -37,6 +37,7 @@ async def ciclo_de_vida(app: FastAPI):
     # O uvicorn so abre a porta depois deste ponto: o atraso garante que a agencia
     # ja consiga receber respostas e anuncios quando a eleicao comecar.
     threading.Timer(ATRASO_ELEICAO_INICIAL_S, app.state.bully.iniciar_eleicao).start()
+    app.state.bully.iniciar_heartbeat()
     yield
 
 
