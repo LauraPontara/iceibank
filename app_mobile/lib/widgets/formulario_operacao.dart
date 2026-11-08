@@ -61,15 +61,15 @@ class _FormularioOperacaoState extends State<FormularioOperacao> {
     final valor = lerValor(_valor.text)!;
     setState(() => _carregando = true);
     try {
-      final mensagem = switch (_aba) {
-        _Aba.deposito => await estado.depositar(valor).then((_) => 'Depósito de ${formatarMoeda(valor)} concluído.'),
-        _Aba.saque => await estado.sacar(valor).then((_) => 'Saque de ${formatarMoeda(valor)} concluído.'),
+      final resultado = switch (_aba) {
+        _Aba.deposito => await estado.depositar(valor),
+        _Aba.saque => await estado.sacar(valor),
         _Aba.transferencia => await estado.transferir(int.parse(_destino.text), valor),
       };
       if (!mounted) return;
       _valor.clear();
       _destino.clear();
-      mostrarAviso(context, mensagem, tipo: TipoAlerta.sucesso);
+      mostrarAviso(context, resultado.mensagem, tipo: resultado.pendente ? TipoAlerta.info : TipoAlerta.sucesso);
     } on ErroApi catch (e) {
       if (mounted && e.status != 401) mostrarAviso(context, e.mensagem);
     } on SemConexao catch (e) {
