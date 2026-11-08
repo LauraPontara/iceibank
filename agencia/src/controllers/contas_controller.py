@@ -60,10 +60,12 @@ def criar_conta(body: CriarContaBody, request: Request):
 @router.get("/contas/{id}")
 def consultar_saldo(id: int, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
     exigir_dono_ou_admin(token, id)
-    conta = request.app.state.contas.obter(id)
-    if conta is None:
-        raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
-    return {**conta_publica(conta), "vetorAtual": request.app.state.relogio.atual()}
+    # Saldo e vetor lidos juntos: o app usa esse par para detectar conflitos depois
+    with request.app.state.relogio.exclusivo():
+        conta = request.app.state.contas.obter(id)
+        if conta is None:
+            raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
+        return {**conta_publica(conta), "vetorAtual": request.app.state.relogio.atual()}
 
 
 @router.post("/contas/{id}/depositar")
@@ -76,8 +78,9 @@ def depositar(id: int, body: ValorBody, request: Request, token: dict = Depends(
     if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
 
-    ts = relogio.evento_local()
-    conta = contas.creditar(id, body.valor)
+    with relogio.exclusivo():
+        ts = relogio.evento_local()
+        conta = contas.creditar(id, body.valor)
     registro.registrar("DEPOSITO", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
     return conta_publica(conta)
@@ -93,11 +96,12 @@ def sacar(id: int, body: ValorBody, request: Request, token: dict = Depends(exig
     if not contas.existe(id):
         raise HTTPException(status_code=404, detail="Conta não encontrada nesta agência.")
 
-    try:
-        conta = contas.debitar(id, body.valor)
-    except SaldoInsuficiente:
-        raise HTTPException(status_code=400, detail="Saldo insuficiente.")
-    ts = relogio.evento_local()
+    with relogio.exclusivo():
+        try:
+            conta = contas.debitar(id, body.valor)
+        except SaldoInsuficiente:
+            raise HTTPException(status_code=400, detail="Saldo insuficiente.")
+        ts = relogio.evento_local()
     registro.registrar("SAQUE", ts, {"id": id, "valor": body.valor, "novoSaldo": conta["saldo"]})
 
     return conta_publica(conta)
