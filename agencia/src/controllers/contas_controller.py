@@ -127,7 +127,8 @@ def sincronizar_operacao_pendente(
         if estado == "concluida":
             return resultado_anterior
         if estado == "em_andamento":
-            raise HTTPException(status_code=409, detail="Esta operação já está sendo sincronizada.")
+            # 423 e nao 409: na sincronizacao, 409 significa sempre conflito de vetor
+            raise HTTPException(status_code=423, detail="Esta operação já está sendo sincronizada.")
 
     try:
         # Comparar e aplicar precisa ser atomico: um evento entre os dois passos
