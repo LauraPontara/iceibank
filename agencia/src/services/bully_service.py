@@ -57,8 +57,15 @@ class ServicoBully:
 
     def _tornar_me_lider(self):
         with self._lock:
-            # Uma agencia maior pode ter se anunciado enquanto esta eleicao rodava
-            if self._lider_atual is not None and self._lider_atual > self.id_agencia:
+            conhecida = self._lider_atual
+
+        # Uma agencia maior pode ter se anunciado enquanto esta eleicao rodava. Se ela
+        # ja caiu e esta agencia ainda nao percebeu, a eleicao segue normalmente.
+        if conhecida is not None and conhecida > self.id_agencia and self._agencia_responde(conhecida):
+            return
+
+        with self._lock:
+            if self._lider_atual != conhecida and self._lider_atual is not None and self._lider_atual > self.id_agencia:
                 return
             self._lider_atual = self.id_agencia
 

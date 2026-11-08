@@ -40,12 +40,21 @@ class TestEleicao(unittest.TestCase):
         urls = [chamada.args[0] for chamada in post.call_args_list]
         self.assertTrue(all(url.endswith("/bully/coordenador") for url in urls))
 
+    @patch("services.bully_service.requests.get")
     @patch("services.bully_service.requests.post", side_effect=recusar_conexao)
-    def test_nao_assume_se_uma_agencia_maior_se_anunciou_durante_a_eleicao(self, _post):
+    def test_nao_assume_se_uma_agencia_maior_viva_se_anunciou(self, _post, _get):
         servico = criar_servico(1)
         servico.receber_coordenador(2, [0, 0, 1])
         servico._tornar_me_lider()
         self.assertEqual(servico.obter_lider_atual(), 2)
+
+    @patch("services.bully_service.requests.get", side_effect=recusar_conexao)
+    @patch("services.bully_service.requests.post", side_effect=recusar_conexao)
+    def test_assume_se_a_lider_maior_conhecida_ja_caiu(self, _post, _get):
+        servico = criar_servico(1)
+        servico.receber_coordenador(2, [0, 0, 1])
+        servico._tornar_me_lider()
+        self.assertEqual(servico.obter_lider_atual(), 1)
 
 
 class TestAnuncioDeCoordenador(unittest.TestCase):
