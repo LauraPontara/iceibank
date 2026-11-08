@@ -70,21 +70,20 @@ class _CartaoMetalState extends State<CartaoMetal> {
 
 BoxDecoration _decoracaoFace(Tokens t) => BoxDecoration(
   borderRadius: BorderRadius.circular(26),
-  gradient: const LinearGradient(
+  gradient: LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF3A3237), Color(0xFF191417), Color(0xFF040304)],
-    stops: [0, 0.42, 1],
+    colors: [t.metalInicio, t.metalMeio, t.metalFim],
+    stops: const [0, 0.42, 1],
   ),
-  border: Border.all(color: const Color(0x29FFFFFF)),
+  border: Border.all(color: t.metalBorda),
   boxShadow: [
     BoxShadow(color: t.primary.withValues(alpha: 0.4), blurRadius: 60, offset: const Offset(0, 24), spreadRadius: -30),
-    const BoxShadow(color: Color(0x80000000), blurRadius: 60, offset: Offset(0, 36), spreadRadius: -24),
+    BoxShadow(color: t.metalSombra, blurRadius: 60, offset: const Offset(0, 36), spreadRadius: -24),
   ],
 );
 
-const _branco = Colors.white;
-final _rotulo = corpo(10, peso: 500, espacamento: 2, cor: _branco.withValues(alpha: 0.45));
+TextStyle _estiloRotulo(Tokens t) => corpo(10, peso: 500, espacamento: 2, cor: t.metalRotulo);
 
 class _Frente extends StatelessWidget {
   const _Frente({required this.ultimos, required this.saldo, required this.rotuloSaldo});
@@ -105,8 +104,8 @@ class _Frente extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('ICEIBank', style: display(14, cor: _branco.withValues(alpha: 0.9))),
-              Text('METAL', style: corpo(12, peso: 500, espacamento: 2.4, cor: _branco.withValues(alpha: 0.4))),
+              Text('ICEIBank', style: display(14, cor: t.metalTexto)),
+              Text('METAL', style: corpo(12, peso: 500, espacamento: 2.4, cor: t.metalRotulo)),
             ],
           ),
           const Spacer(),
@@ -117,13 +116,13 @@ class _Frente extends StatelessWidget {
                 height: 32,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  color: t.primary.withValues(alpha: 0.8),
+                  color: t.metalChip,
                   border: Border.all(color: const Color(0x33FFFFFF)),
-                  boxShadow: [BoxShadow(color: t.primary, blurRadius: 20, spreadRadius: -2)],
+                  boxShadow: [BoxShadow(color: t.metalChipBrilho, blurRadius: 20, spreadRadius: -2)],
                 ),
               ),
               const SizedBox(width: 12),
-              Text('5301 ···· $ultimos', style: corpo(13, espacamento: 3.4, cor: _branco.withValues(alpha: 0.7))),
+              Text('5301 ···· $ultimos', style: corpo(13, espacamento: 3.4, cor: t.metalTextoSuave)),
             ],
           ),
           const Spacer(),
@@ -135,10 +134,10 @@ class _Frente extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(rotuloSaldo.toUpperCase(), style: _rotulo),
+                    Text(rotuloSaldo.toUpperCase(), style: _estiloRotulo(t)),
                     const SizedBox(height: 2),
                     if (saldo == null)
-                      Text('...', style: display(22, peso: 500, cor: _branco))
+                      Text('...', style: display(22, peso: 500, cor: t.metalTexto))
                     else
                       TweenAnimationBuilder<double>(
                         tween: Tween(end: saldo),
@@ -146,7 +145,7 @@ class _Frente extends StatelessWidget {
                         curve: Curves.easeOut,
                         builder: (context, valor, _) => Text(
                           formatarMoeda(valor),
-                          style: display(22, peso: 500, cor: _branco),
+                          style: display(22, peso: 500, cor: t.metalTexto),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -154,7 +153,7 @@ class _Frente extends StatelessWidget {
                   ],
                 ),
               ),
-              Text('VISA', style: corpo(14, peso: 500, cor: _branco.withValues(alpha: 0.6))),
+              Text('VISA', style: corpo(14, peso: 500, cor: t.metalTextoSuave)),
             ],
           ),
         ],
@@ -178,24 +177,24 @@ class _Verso extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(height: 40, margin: const EdgeInsets.only(top: 20), color: const Color(0xFF040304)),
+          Container(height: 40, margin: const EdgeInsets.only(top: 20), color: t.metalTarja),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('TITULAR', style: _rotulo),
+                Text('TITULAR', style: _estiloRotulo(t)),
                 const SizedBox(height: 2),
                 Text(
                   titular,
-                  style: display(16, peso: 500, cor: _branco),
+                  style: display(16, peso: 500, cor: t.metalTexto),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                Text('CONTA', style: _rotulo),
+                Text('CONTA', style: _estiloRotulo(t)),
                 const SizedBox(height: 2),
-                Text('$conta', style: mono(16, peso: 500, cor: _branco)),
+                Text('$conta', style: mono(16, peso: 500, cor: t.metalTexto)),
               ],
             ),
           ),

@@ -17,6 +17,17 @@ class Tokens extends ThemeExtension<Tokens> {
     required this.input,
     required this.destructive,
     required this.ink,
+    required this.metalInicio,
+    required this.metalMeio,
+    required this.metalFim,
+    required this.metalTexto,
+    required this.metalTextoSuave,
+    required this.metalRotulo,
+    required this.metalBorda,
+    required this.metalTarja,
+    required this.metalSombra,
+    required this.metalChip,
+    required this.metalChipBrilho,
   });
 
   final Color background;
@@ -31,6 +42,17 @@ class Tokens extends ThemeExtension<Tokens> {
   final Color input;
   final Color destructive;
   final Color ink;
+  final Color metalInicio;
+  final Color metalMeio;
+  final Color metalFim;
+  final Color metalTexto;
+  final Color metalTextoSuave;
+  final Color metalRotulo;
+  final Color metalBorda;
+  final Color metalTarja;
+  final Color metalSombra;
+  final Color metalChip;
+  final Color metalChipBrilho;
 
   static const escuro = Tokens(
     background: Color(0xFF0C090B),
@@ -45,6 +67,17 @@ class Tokens extends ThemeExtension<Tokens> {
     input: Color(0x26FFFFFF),
     destructive: Color(0xFFFF6467),
     ink: Color(0xFF100C0E),
+    metalInicio: Color(0xFF3A3237),
+    metalMeio: Color(0xFF191417),
+    metalFim: Color(0xFF040304),
+    metalTexto: Color(0xFFFFFFFF),
+    metalTextoSuave: Color(0xB3FFFFFF),
+    metalRotulo: Color(0x73FFFFFF),
+    metalBorda: Color(0x29FFFFFF),
+    metalTarja: Color(0xFF040304),
+    metalSombra: Color(0x80000000),
+    metalChip: Color(0xCCF5289F),
+    metalChipBrilho: Color(0xFFF5289F),
   );
 
   static const claro = Tokens(
@@ -60,6 +93,17 @@ class Tokens extends ThemeExtension<Tokens> {
     input: Color(0xFFE9E2E5),
     destructive: Color(0xFFE7000B),
     ink: Color(0xFF100C0E),
+    metalInicio: Color(0xFFEA1496),
+    metalMeio: Color(0xFFE10B8F),
+    metalFim: Color(0xFFB2006F),
+    metalTexto: Color(0xFFFFFFFF),
+    metalTextoSuave: Color(0xEBFFFFFF),
+    metalRotulo: Color(0xE6FFFFFF),
+    metalBorda: Color(0x40FFFFFF),
+    metalTarja: Color(0xFF590034),
+    metalSombra: Color(0x8CEA1496),
+    metalChip: Color(0x47FFFFFF),
+    metalChipBrilho: Color(0x73FFFFFF),
   );
 
   @override
@@ -76,6 +120,17 @@ class Tokens extends ThemeExtension<Tokens> {
     Color? input,
     Color? destructive,
     Color? ink,
+    Color? metalInicio,
+    Color? metalMeio,
+    Color? metalFim,
+    Color? metalTexto,
+    Color? metalTextoSuave,
+    Color? metalRotulo,
+    Color? metalBorda,
+    Color? metalTarja,
+    Color? metalSombra,
+    Color? metalChip,
+    Color? metalChipBrilho,
   }) {
     return Tokens(
       background: background ?? this.background,
@@ -90,6 +145,17 @@ class Tokens extends ThemeExtension<Tokens> {
       input: input ?? this.input,
       destructive: destructive ?? this.destructive,
       ink: ink ?? this.ink,
+      metalInicio: metalInicio ?? this.metalInicio,
+      metalMeio: metalMeio ?? this.metalMeio,
+      metalFim: metalFim ?? this.metalFim,
+      metalTexto: metalTexto ?? this.metalTexto,
+      metalTextoSuave: metalTextoSuave ?? this.metalTextoSuave,
+      metalRotulo: metalRotulo ?? this.metalRotulo,
+      metalBorda: metalBorda ?? this.metalBorda,
+      metalTarja: metalTarja ?? this.metalTarja,
+      metalSombra: metalSombra ?? this.metalSombra,
+      metalChip: metalChip ?? this.metalChip,
+      metalChipBrilho: metalChipBrilho ?? this.metalChipBrilho,
     );
   }
 
@@ -109,6 +175,17 @@ class Tokens extends ThemeExtension<Tokens> {
       input: Color.lerp(input, other.input, t)!,
       destructive: Color.lerp(destructive, other.destructive, t)!,
       ink: Color.lerp(ink, other.ink, t)!,
+      metalInicio: Color.lerp(metalInicio, other.metalInicio, t)!,
+      metalMeio: Color.lerp(metalMeio, other.metalMeio, t)!,
+      metalFim: Color.lerp(metalFim, other.metalFim, t)!,
+      metalTexto: Color.lerp(metalTexto, other.metalTexto, t)!,
+      metalTextoSuave: Color.lerp(metalTextoSuave, other.metalTextoSuave, t)!,
+      metalRotulo: Color.lerp(metalRotulo, other.metalRotulo, t)!,
+      metalBorda: Color.lerp(metalBorda, other.metalBorda, t)!,
+      metalTarja: Color.lerp(metalTarja, other.metalTarja, t)!,
+      metalSombra: Color.lerp(metalSombra, other.metalSombra, t)!,
+      metalChip: Color.lerp(metalChip, other.metalChip, t)!,
+      metalChipBrilho: Color.lerp(metalChipBrilho, other.metalChipBrilho, t)!,
     );
   }
 }
