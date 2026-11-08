@@ -175,10 +175,10 @@ class ContaEstado extends ChangeNotifier {
     final String mensagem;
     switch (tipo) {
       case TipoOperacao.deposito:
-        await chamarApi(url, '/contas/${sessao.contaId}/depositar', metodo: 'POST', corpo: {'valor': valor}, token: sessao.token);
+        await chamarApi(url, '/contas/${sessao.contaId}/depositar', metodo: 'POST', corpo: {'valor': valor, 'idempotencyKey': chave}, token: sessao.token);
         mensagem = 'Depósito de ${formatarMoeda(valor)} concluído.';
       case TipoOperacao.saque:
-        await chamarApi(url, '/contas/${sessao.contaId}/sacar', metodo: 'POST', corpo: {'valor': valor}, token: sessao.token);
+        await chamarApi(url, '/contas/${sessao.contaId}/sacar', metodo: 'POST', corpo: {'valor': valor, 'idempotencyKey': chave}, token: sessao.token);
         mensagem = 'Saque de ${formatarMoeda(valor)} concluído.';
       case TipoOperacao.transferencia:
         final resultado = await chamarApi(
