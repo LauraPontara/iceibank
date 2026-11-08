@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
-from controllers.contas_controller import SincronizarBody, sincronizar_operacao_pendente
+from controllers.contas_controller import SincronizarBody, ValorBody, sacar, sincronizar_operacao_pendente
 from repositories.conta_repository import ContaRepository
 from repositories.idempotencia_repository import IdempotenciaRepository
 from services.relogio_vetorial import RelogioVetorial
@@ -66,6 +66,12 @@ class TestSincronizacao(unittest.TestCase):
         self.sincronizar(tipo="DEPOSITO", valor=50, vetorConhecido=vetor_antigo, idempotencyKey="k")
         resultado = self.sincronizar(tipo="DEPOSITO", valor=50, idempotencyKey="k")
         self.assertEqual(resultado["saldo"], 150)
+
+    def test_saque_com_resposta_perdida_nao_e_aplicado_de_novo_ao_sincronizar(self):
+        vetor_do_app = self.relogio.atual()
+        sacar(3, ValorBody(valor=40, idempotencyKey="s"), self.request, TOKEN_DONO)
+        self.sincronizar(tipo="SAQUE", valor=40, vetorConhecido=vetor_do_app, idempotencyKey="s")
+        self.assertEqual(self.contas.obter(3)["saldo"], 60)
 
     def test_saque_maior_que_o_saldo_nao_avanca_o_relogio(self):
         with self.assertRaises(HTTPException) as erro:

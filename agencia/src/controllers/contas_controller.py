@@ -24,6 +24,7 @@ class CriarContaBody(BaseModel):
 
 class ValorBody(BaseModel):
     valor: float = Field(gt=0)
+    idempotencyKey: str | None = None
 
 
 class SincronizarBody(BaseModel):
@@ -70,9 +71,35 @@ def consultar_saldo(id: int, request: Request, token: dict = Depends(exigir_usua
         return {**conta_publica(conta), "vetorAtual": request.app.state.relogio.atual()}
 
 
+def _com_idempotencia(request: Request, chave: str | None, operacao):
+    """O app reenvia pela sincronizacao o que nao teve resposta. Com a mesma chave,
+    uma operacao ja aplicada devolve o resultado em vez de ser aplicada de novo."""
+    if chave is None:
+        return operacao()
+
+    idempotencia = request.app.state.idempotencia
+    estado, resultado_anterior = idempotencia.reservar(chave)
+    if estado == "concluida":
+        return resultado_anterior
+    if estado == "em_andamento":
+        raise HTTPException(status_code=423, detail="Esta operação já está em andamento.")
+
+    try:
+        resultado = operacao()
+    except BaseException:
+        idempotencia.liberar(chave)
+        raise
+    idempotencia.registrar(chave, resultado)
+    return resultado
+
+
 @router.post("/contas/{id}/depositar")
 def depositar(id: int, body: ValorBody, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
     exigir_dono_ou_admin(token, id)
+    return _com_idempotencia(request, body.idempotencyKey, lambda: _aplicar_deposito(id, body, request))
+
+
+def _aplicar_deposito(id: int, body: ValorBody, request: Request) -> dict:
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
@@ -91,6 +118,10 @@ def depositar(id: int, body: ValorBody, request: Request, token: dict = Depends(
 @router.post("/contas/{id}/sacar")
 def sacar(id: int, body: ValorBody, request: Request, token: dict = Depends(exigir_usuario_ou_admin)):
     exigir_dono_ou_admin(token, id)
+    return _com_idempotencia(request, body.idempotencyKey, lambda: _aplicar_saque(id, body, request))
+
+
+def _aplicar_saque(id: int, body: ValorBody, request: Request) -> dict:
     contas = request.app.state.contas
     relogio = request.app.state.relogio
     registro = request.app.state.registro
