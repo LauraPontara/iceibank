@@ -1,6 +1,12 @@
 # iceibank
 Trabalho Prático do Laboratório de Desenvolvimento de Aplicações Móveis e Distribuídas
 
+## Vídeo das Sprints 2 e 3
+
+[![Vídeo de apresentação das Sprints 2 e 3](evidencias/video/capa.png)](evidencias/video/apresentacao-sprints-2-e-3.mp4)
+
+Clique na imagem para assistir (4min49s, sem áudio). O vídeo usa gravações reais do sistema rodando: as 3 agências conectadas ao RabbitMQ no CloudAMQP, o site e o app Flutter num celular Android. Ele passa pela mensageria com relógio vetorial, a resiliência da fila e a dead-letter queue (Sprint 2), e pela eleição de líder com failover, o app com painel da líder, o tratamento de erros e o modo offline-first com conflito (Sprint 3).
+
 ## RabbitMQ (Sprint 2)
 
 As agências trocam créditos entre si por mensageria. O broker pode ser uma instância gratuita no CloudAMQP (plano Little Lemur, o caminho principal do roteiro) ou um RabbitMQ local em Docker. A aplicação funciona igual nos dois casos, só muda o valor de `RABBITMQ_URL`.
