@@ -129,7 +129,7 @@ Quando a publicação em si falha (broker fora do ar), a agência estorna o déb
 
 ### 3. O consumidor aplica créditos sem verificar JWT. Isso é um problema de segurança?
 
-É um problema, e a gravidade depende de quem consegue publicar na exchange. No meu ambiente de desenvolvimento o RabbitMQ roda local com o usuário padrão `guest`, que o RabbitMQ só aceita a partir de localhost, então a exposição é pequena. Mas quem conseguisse publicar uma mensagem em `iceibank.eventos` com a routing key `agencia.1.creditar` criaria dinheiro em qualquer conta, sem nenhuma autenticação de usuário, porque o consumidor confia em tudo que chega pela fila. Em produção isso exigiria usuários e permissões por vhost no broker, TLS na conexão e assinatura das mensagens (por exemplo HMAC ou um token dentro da mensagem) para o consumidor validar a origem. A confiança que antes estava no token HTTP entre agências passa a depender do controle de acesso ao broker.
+É um problema, e a gravidade depende de quem consegue publicar na exchange. Nos testes com o RabbitMQ local em Docker, o usuário padrão `guest` só é aceito a partir de localhost, então a exposição era pequena. Na instância do CloudAMQP, usada nos prints, o broker fica na internet: a conexão usa TLS (`amqps://`) e exige usuário e senha, mas essas credenciais vêm dentro da própria `RABBITMQ_URL`, e qualquer pessoa ou processo que tenha essa URL consegue publicar. Por isso a URL nunca foi versionada no repositório e é passada só por variável de ambiente. Mesmo assim, quem conseguisse publicar uma mensagem em `iceibank.eventos` com a routing key `agencia.1.creditar` criaria dinheiro em qualquer conta, sem nenhuma autenticação de usuário, porque o consumidor confia em tudo que chega pela fila. Em produção isso exigiria usuários e permissões por vhost no broker, TLS na conexão e assinatura das mensagens (por exemplo HMAC ou um token dentro da mensagem) para o consumidor validar a origem. A confiança que antes estava no token HTTP entre agências passa a depender do controle de acesso ao broker.
 
 ## Parte D. Linha do tempo causal
 
@@ -171,7 +171,7 @@ Depois das mudanças deste sprint verifiquei, rodando as agências e o frontend,
 
 ## Nota de uso de IA (Sprint 2)
 
-O Sprint 2 foi implementado com o Claude Code (Anthropic), que escreveu o código, rodou o RabbitMQ em Docker, executou os testes descritos acima (transferência assíncrona, resiliência, dead-letter queue, linha do tempo causal e regressão do frontend e do JWT) e redigiu um rascunho deste documento a partir do que foi observado. As respostas devem ser revisadas e compreendidas antes da entrega, porque preciso ser capaz de explicar e defender qualquer trecho entregue, como pede a nota de transparência do roteiro.
+O Sprint 2 foi implementado com o Claude Code (Anthropic), que escreveu o código, rodou o RabbitMQ em Docker, executou os testes descritos acima (transferência assíncrona, resiliência, dead-letter queue, linha do tempo causal e regressão do frontend e do JWT) e redigiu um rascunho deste documento a partir do que foi observado. Revisei o código e as respostas antes da entrega e sou capaz de explicar e defender qualquer trecho entregue. Declaro esse uso conforme pedido na nota de transparência do roteiro.
 
 ---
 
@@ -287,4 +287,4 @@ Os 30 testes de unidade passam (`python -m unittest discover -s tests`), cobrind
 
 ## Nota de uso de IA (Sprint 3)
 
-O Sprint 3 foi implementado com o Claude Code (Anthropic), que escreveu o código do backend e do app Flutter, instalou o ambiente, executou os testes descritos acima, operou o app no celular e capturou os prints do aparelho, revisou o código em busca de erros e redigiu um rascunho deste documento a partir do que foi observado. Os prints do terminal foram tirados por mim. As respostas devem ser revisadas e compreendidas antes da entrega, porque preciso ser capaz de explicar e defender qualquer trecho entregue, como pede a nota de transparência do roteiro.
+O Sprint 3 foi implementado com o Claude Code (Anthropic), que escreveu o código do backend e do app Flutter, instalou o ambiente, executou os testes descritos acima, operou o app no celular e capturou os prints do aparelho, revisou o código em busca de erros e redigiu um rascunho deste documento a partir do que foi observado. Os prints do terminal foram tirados por mim. Revisei o código e as respostas antes da entrega e sou capaz de explicar e defender qualquer trecho entregue. Declaro esse uso conforme pedido na nota de transparência do roteiro.
