@@ -11,6 +11,7 @@ import '../tema/tokens.dart';
 import '../widgets/base.dart';
 import '../widgets/fundo_ambiente.dart';
 import '../widgets/logo.dart';
+import 'abrir_conta_tela.dart';
 
 class LoginTela extends StatefulWidget {
   const LoginTela({super.key});
@@ -50,6 +51,11 @@ class _LoginTelaState extends State<LoginTela> {
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
+  }
+
+  void _abrirConta() {
+    setState(() => _erro = null);
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AbrirContaTela()));
   }
 
   Future<void> _editarServidor() async {
@@ -141,6 +147,13 @@ class _LoginTelaState extends State<LoginTela> {
                             ),
                             const SizedBox(height: 24),
                             BotaoPrimario(rotulo: 'Entrar', carregando: _carregando, aoTocar: _entrar),
+                            const SizedBox(height: 12),
+                            Center(
+                              child: TextButton(
+                                onPressed: _carregando ? null : _abrirConta,
+                                child: Text('Ainda não tem conta? Abra a sua', style: corpo(13, peso: 500, cor: t.primary)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
