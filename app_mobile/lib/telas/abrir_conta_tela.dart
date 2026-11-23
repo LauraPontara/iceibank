@@ -34,7 +34,17 @@ class _AbrirContaTelaState extends State<AbrirContaTela> {
   String? _erro;
 
   @override
+  void initState() {
+    super.initState();
+    // Ouve o controlador, e nao so a digitacao: colar um numero tambem atualiza a agencia.
+    _numero.addListener(_aoMudarNumero);
+  }
+
+  void _aoMudarNumero() => setState(() {});
+
+  @override
   void dispose() {
+    _numero.removeListener(_aoMudarNumero);
     _nome.dispose();
     _senha.dispose();
     _confirmacao.dispose();
@@ -149,7 +159,6 @@ class _AbrirContaTelaState extends State<AbrirContaTela> {
                               controlador: _numero,
                               dica: 'Ex.: 1001',
                               teclado: TextInputType.number,
-                              aoMudar: (_) => setState(() {}),
                               validador: (v) {
                                 final texto = (v ?? '').trim();
                                 if (texto.isEmpty) return null;
